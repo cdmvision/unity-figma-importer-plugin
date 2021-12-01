@@ -1,0 +1,26 @@
+{
+  "dependencies": {
+    "@create-figma-plugin/ui": "^1.7.3",
+    "@create-figma-plugin/utilities": "^1.7.3",
+    "preact": "^10"
+  },
+  "devDependencies": {
+    "@create-figma-plugin/build": "^1.7.3",
+    "@create-figma-plugin/tsconfig": "^1.7.3",
+    "@figma/plugin-typings": "1.37.0",
+    "typescript": "^4"
+  },
+  "scripts": {
+    "build": "build-figma-plugin --typecheck --minify",
+    "watch": "build-figma-plugin --typecheck --watch"
+  },
+  "figma-plugin": {
+    "editorType": [
+      "figma"
+    ],
+    "id": "1047282855279327962",
+    "name": "Unity Importer",
+    "main": "src/main.ts",
+    "ui": "src/ui.tsx"
+  }
+}

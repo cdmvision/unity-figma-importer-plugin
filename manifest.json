@@ -1,0 +1,10 @@
+{
+  "api": "1.0.0",
+  "editorType": [
+    "figma"
+  ],
+  "id": "1047282855279327962",
+  "name": "Unity Importer",
+  "main": "build/main.js",
+  "ui": "build/ui.js"
+}
