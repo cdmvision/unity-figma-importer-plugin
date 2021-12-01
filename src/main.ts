@@ -21,9 +21,6 @@ function setSelectedNode(node: SceneNode | null) {
 
   //console.log('bindingKey:' + data.bindingKey + ' localizationKey:' + data.localizationKey + ' componentType:' + data.componentType);
 
-  const options = { width: 240, height: 230 };
-  showUI(options, data);
-
   emit<SetBindingKeyHandler>('SET_BINDING_KEY', data.bindingKey, data.nodeType);
   emit<SetLocalizationKeyHandler>('SET_LOCALIZATION_KEY', data.localizationKey, data.nodeType);
   emit<SetComponentTypeHandler>('SET_COMPONENT_TYPE', data.componentType, data.nodeType);
@@ -34,21 +31,11 @@ export default function () {
 
   figma.on('selectionchange', function () {
     
-    if (figma.currentPage.selection.length > 0) {
+    if (figma.currentPage.selection.length == 1) {
       node = figma.currentPage.selection[0];
-
-      const nodeType = node.type;
-      const bindingKey = node.getPluginData(PluginDataBindingKey);
-      const localizationKey = node.getPluginData(PluginDataLocalizationKey);
-      const componentType = node.getPluginData(PluginDataComponentTypeKey);
-
-      emit<SetBindingKeyHandler>('SET_BINDING_KEY', bindingKey, nodeType);
-      emit<SetLocalizationKeyHandler>('SET_LOCALIZATION_KEY', localizationKey, nodeType);
-      emit<SetComponentTypeHandler>('SET_COMPONENT_TYPE', componentType, nodeType);
+      setSelectedNode(node);
     } else {
-      emit<SetBindingKeyHandler>('SET_BINDING_KEY', '', '');
-      emit<SetLocalizationKeyHandler>('SET_LOCALIZATION_KEY', '', '');
-      emit<SetComponentTypeHandler>('SET_COMPONENT_TYPE', '', '');
+      setSelectedNode(null);
     }
   });
 
@@ -71,5 +58,7 @@ export default function () {
     figma.closePlugin();
   })
 
+  const options = { width: 240, height: 230 };
+  showUI(options);
   setSelectedNode(node);
 }
