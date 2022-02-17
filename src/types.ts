@@ -1,21 +1,13 @@
-import { EventHandler } from '@create-figma-plugin/utilities'
+export const events = {
+  bindingKeyChange : "bindingKeyChange",
+  localizationKeyChange : "localizationKeyChange",
+  componentTypeChange : "componentTypeChange",
+  close: "close"
+};
 
-export interface SetBindingKeyHandler extends EventHandler {
-  name: 'SET_BINDING_KEY'
-  handler: (bindingKey: string, nodeType: string) => void
-}
+export const pluginData = {
+  bindingKey: 'bindingKey', 
+  localizationKey: 'localizationKey',
+  componentType: 'componentType' 
+};
 
-export interface SetLocalizationKeyHandler extends EventHandler {
-  name: 'SET_LOCALIZATION_KEY'
-  handler: (localizationKey: string, nodeType: string) => void
-}
-
-export interface SetComponentTypeHandler extends EventHandler {
-  name: 'SET_COMPONENT_TYPE'
-  handler: (componentType: string, nodeType: string) => void
-}
-
-export interface CloseHandler extends EventHandler {
-  name: 'CLOSE'
-  handler: () => void
-}

@@ -1,29 +1,27 @@
 import { on, once, emit, showUI } from '@create-figma-plugin/utilities'
 
-import { CloseHandler, SetBindingKeyHandler, SetLocalizationKeyHandler, SetComponentTypeHandler } from './types'
-
-const PluginDataBindingKey = "bindingKey";
-const PluginDataLocalizationKey = "localizationKey";
-const PluginDataComponentTypeKey = "componentType";
+import { events, pluginData} from './types'
 
 function setSelectedNode(node: SceneNode | null) {
-  var data = { nodeType: '', bindingKey: '', localizationKey: '', componentType: '' };
-  if (node) {
-    const bindingKey = node.getPluginData(PluginDataBindingKey);
-    const localizationKey = node.getPluginData(PluginDataLocalizationKey);
-    const componentType = node.getPluginData(PluginDataComponentTypeKey);
+  var data = { 
+    nodeType: '', 
+    bindingKey: '', 
+    locTableEntryRef: '',
+    componentType: '' 
+  };
 
+  if (node) {
     data.nodeType = node.type;
-    data.bindingKey = bindingKey;
-    data.localizationKey = localizationKey;
-    data.componentType = componentType;
+    data.bindingKey = node.getPluginData(pluginData.bindingKey);
+    data.locTableEntryRef = node.getPluginData(pluginData.localizationKey);
+    data.componentType = node.getPluginData(pluginData.componentType);
   }
 
-  //console.log('bindingKey:' + data.bindingKey + ' localizationKey:' + data.localizationKey + ' componentType:' + data.componentType);
+  //console.log('bindingKey:' + data.bindingKey + ' locTableEntryRef:' + data.locTableEntryRef + ' componentType:' + data.componentType);
 
-  emit<SetBindingKeyHandler>('SET_BINDING_KEY', data.bindingKey, data.nodeType);
-  emit<SetLocalizationKeyHandler>('SET_LOCALIZATION_KEY', data.localizationKey, data.nodeType);
-  emit<SetComponentTypeHandler>('SET_COMPONENT_TYPE', data.componentType, data.nodeType);
+  emit(events.bindingKeyChange, data.bindingKey, data.nodeType);
+  emit(events.localizationKeyChange, data.locTableEntryRef, data.nodeType);
+  emit(events.componentTypeChange, data.componentType, data.nodeType);
 }
 
 export default function () {
@@ -39,22 +37,19 @@ export default function () {
     }
   });
 
-  on<SetBindingKeyHandler>('SET_BINDING_KEY', function (bindingKey: string) {
-    //console.log('Saving: ' + node.id +  ' bindingKey:' + bindingKey);
-    node.setPluginData(PluginDataBindingKey, bindingKey ? bindingKey : '');
+  on(events.bindingKeyChange, function (value: string) {
+    node.setPluginData(pluginData.bindingKey, value ? value : '');
   })
 
-  on<SetLocalizationKeyHandler>('SET_LOCALIZATION_KEY', function (localizationKey: string) {
-    //console.log('Saving: ' + node.id +  ' localizationKey:' + localizationKey);
-    node.setPluginData(PluginDataLocalizationKey, localizationKey ? localizationKey : '');
+  on(events.localizationKeyChange, function (value: string) {
+    node.setPluginData(pluginData.localizationKey, value ? value : '');
   })
 
-  on<SetComponentTypeHandler>('SET_COMPONENT_TYPE', function (componentType: string) {
-    //console.log('Saving: ' + node.id +  ' componentType:' + componentType);
-    node.setPluginData(PluginDataComponentTypeKey, componentType ? componentType : '');
+  on(events.componentTypeChange, function (value: string) {
+    node.setPluginData(pluginData.componentType, value ? value : '');
   })
 
-  once<CloseHandler>('CLOSE', function () {
+  once(events.close, function () {
     figma.closePlugin();
   })
 

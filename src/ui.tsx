@@ -8,45 +8,45 @@ import {
 
 import { on, emit } from '@create-figma-plugin/utilities'
 import { h } from 'preact'
-import { useCallback, useState } from 'preact/hooks'
 
-import { SetBindingKeyHandler, SetLocalizationKeyHandler, SetComponentTypeHandler } from './types'
+import { events, pluginData } from './types'
 
 function Plugin(data: { }) {
-  on<SetBindingKeyHandler>('SET_BINDING_KEY', function (bindingKey: string, nodeType: string) {
-    var bindingKeyField = document.getElementById("bindingKeyField") as HTMLInputElement;
-    if (bindingKeyField) {
-      bindingKeyField.value = bindingKey;
-      bindingKeyField.disabled = nodeType == '';
+
+  on(events.bindingKeyChange, function (value: string, nodeType: string) {
+    var field = document.getElementById(pluginData.bindingKey) as HTMLInputElement;
+    if (field) {
+      field.value = value;
+      field.disabled = nodeType == '';
     }
   })
 
-  on<SetLocalizationKeyHandler>('SET_LOCALIZATION_KEY', function (localizationKey: string, nodeType: string) {
-    var localizationKeyField = document.getElementById("localizationKeyField") as HTMLInputElement;
-    if (localizationKeyField) {
-      localizationKeyField.value = localizationKey;
-      localizationKeyField.disabled = nodeType == '' || nodeType !== 'TEXT';
+  on(events.localizationKeyChange, function (value: string, nodeType: string) {
+    var field = document.getElementById(pluginData.localizationKey) as HTMLInputElement;
+    if (field) {
+      field.value = value;
+      field.disabled = nodeType == '' || nodeType !== 'TEXT';
     }
   })
 
-  on<SetComponentTypeHandler>('SET_COMPONENT_TYPE', function (componentType: string, nodeType: string) {
-    var componentTypeField = document.getElementById("componentTypeField") as HTMLInputElement;
-    if (componentTypeField) {
-      componentTypeField.value = componentType;
-      componentTypeField.disabled = nodeType == '' || (nodeType !== 'COMPONENT_SET' && nodeType !== 'COMPONENT');
+  on(events.componentTypeChange, function (value: string, nodeType: string) {
+    var field = document.getElementById(pluginData.componentType) as HTMLInputElement;
+    if (field) {
+      field.value = value;
+      field.disabled = nodeType == '' || (nodeType !== 'COMPONENT_SET' && nodeType !== 'COMPONENT');
     }
   })
 
   function setBindingKey(value: string) {
-    emit<SetBindingKeyHandler>('SET_BINDING_KEY', value, '');
+    emit(events.bindingKeyChange, value, '');
   }
 
-  function setLocalizationKey(value: string) {
-    emit<SetLocalizationKeyHandler>('SET_LOCALIZATION_KEY', value, '');
+  function setLocalizationTableEntryRef(value: string) {
+    emit(events.localizationKeyChange, value, '');
   }
 
   function setComponentType(value: string) {
-    emit<SetComponentTypeHandler>('SET_COMPONENT_TYPE', value, '');
+    emit(events.componentTypeChange, value, '');
   }
 
   return (
@@ -54,19 +54,19 @@ function Plugin(data: { }) {
       <VerticalSpace space="large" />
       <Text>Binding Key</Text>
       <VerticalSpace space="small" />
-      <Textbox id="bindingKeyField" onValueInput={setBindingKey} value=''/>
+      <Textbox id={pluginData.bindingKey} onValueInput={setBindingKey} value=''/>
       <VerticalSpace space="small" />
 
       <VerticalSpace space="small" />
       <Text>Localization Key</Text>
       <VerticalSpace space="small" />
-      <Textbox id="localizationKeyField" onValueInput={setLocalizationKey} value=''/>
+      <Textbox id={pluginData.localizationKey} onValueInput={setLocalizationTableEntryRef} value=''/>
       <VerticalSpace space="small" />
 
       <VerticalSpace space="small" />
       <Text>Component Type</Text>
       <VerticalSpace space="small" />
-      <Textbox id="componentTypeField" onValueInput={setComponentType} value=''/>
+      <Textbox id={pluginData.componentType} onValueInput={setComponentType} value=''/>
       <VerticalSpace space="small" />
     </Container>
   )
