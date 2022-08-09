@@ -7,11 +7,15 @@ export default function () {
     refreshUI();
   });
 
-  on(events.selectedNodeUpdated, function (metadataStr: string) {
+  on(events.selectedNodeUpdated, function (metadataStr: string, repaint: boolean) {
     var node = figma.currentPage.selection[0];
     const metadata = deserializeMetadata(metadataStr);
     updateNodeByMetadata(node, metadata);
-    refreshUI();
+
+    if (repaint)
+    {
+      refreshUI();
+    }
   });
 
   on(events.refreshUI, function () {
@@ -22,11 +26,10 @@ export default function () {
     figma.closePlugin();
   })
 
-
-  on('RESIZE_WINDOW', function (windowSize: { width: number; height: number }) {
+  /*on('RESIZE_WINDOW', function (windowSize: { width: number; height: number }) {
     const { width, height } = windowSize
     figma.ui.resize(width, height)
-  })
+  })*/
 
   refreshUI();
 }
@@ -38,10 +41,9 @@ function refreshUI()
 
   console.log('Selected node: ' + metadataJson);
 
-  const options = { width: 240, height: 500 };
+  const options = { width: 240, height: 440 };
   showUI(options, {metadataJson: metadataJson});
 }
-
 
 function createMetadataFromNode(node:SceneNode | null): NodeMetadata | null {
   if (node != null)
@@ -72,5 +74,7 @@ function updateNodeByMetadata(node: SceneNode, metadata: NodeMetadata | null)
     node.setPluginData(pluginData.localizationKey, metadata.localizationKey ? metadata.localizationKey : '');
     node.setPluginData(pluginData.componentType, metadata.componentType ? metadata.componentType : '');
     node.setPluginData(pluginData.componentData, metadata.componentData ? JSON.stringify(metadata.componentData) : '');
+
+    console.log('Selected node updated: ' + serializeMetadata(metadata));
   }
 }

@@ -1,11 +1,6 @@
 export const events = {
-  selectedNodeChanged: 'selectedNodeChanged',
   selectedNodeUpdated: 'selectedNodeUpdated',
   refreshUI: 'refreshUI',
-
-  bindingKeyChange : 'bindingKeyChange',
-  localizationKeyChange : 'localizationKeyChange',
-  componentTypeChange : 'componentTypeChange',
   close: 'close'
 };
 

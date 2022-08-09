@@ -12,9 +12,12 @@ import {
   DropdownOption,
   Dropdown,
   Button,
+  IconInfo32,
+  Banner,
+  Divider,
 } from '@create-figma-plugin/ui'
 
-import { on, emit } from '@create-figma-plugin/utilities'
+import { emit } from '@create-figma-plugin/utilities'
 import { h, JSX } from 'preact'
 import { useState } from 'preact/hooks'
 import { deserializeMetadata, events, NodeMetadata, pluginData, serializeMetadata } from './types'
@@ -22,17 +25,16 @@ import { deserializeMetadata, events, NodeMetadata, pluginData, serializeMetadat
 
 let metadata: NodeMetadata | null = null;
 
-function emitNodeUpdated() {
+function emitNodeUpdated(repaint: boolean) {
   let metadataStr = serializeMetadata(metadata);
-  console.log('Selected node updated, metadata: ' + metadataStr);
-  emit(events.selectedNodeUpdated, metadataStr);
+  emit(events.selectedNodeUpdated, metadataStr, repaint);
 }
 
 enum SliderDirection {
-  LeftToRight = 'Left To Right',
-  RightToLeft = 'Right To Left',
-  BottomToTop = 'Bottom To Top',
-  TopToBottom = 'Top To Bottom'
+  LeftToRight = 'LeftToRight',
+  RightToLeft = 'RightToLeft',
+  BottomToTop = 'BottomToTop',
+  TopToBottom = 'TopToBottom'
 }
 
 export abstract class ComponentData {
@@ -79,21 +81,27 @@ class SliderData extends ComponentData {
     return 'Slider';
   }
 
-  private setDirection(event: JSX.TargetedEvent<HTMLInputElement>) {
-    var slider = metadata?.componentData as SliderData;
-    slider.direction = event.currentTarget.value as SliderDirection;
-    emitNodeUpdated();
-  }
-
   getForm(): h.JSX.Element | null {
     const options: Array<DropdownOption> = Object.values(SliderDirection).map(v => ({ value: v }));
+    const [direction, setDirection] = useState<SliderDirection>(this.direction);
+
+    function getSlider() {
+      return metadata?.componentData as SliderData;
+    }
+
+    function handleDirectionInput(event: JSX.TargetedEvent<HTMLInputElement>) {
+      const value = event.currentTarget.value as SliderDirection;
+      setDirection(value);
+      getSlider().direction = value;
+      emitNodeUpdated(false);
+    }
 
     return (
       <Container>
         <VerticalSpace space="small" />
         <Text>Direction</Text>
         <VerticalSpace space="small" />
-        <Dropdown onChange={this.setDirection} options={options} value={this.direction} />
+        <Dropdown onChange={handleDirectionInput} options={options} value={direction} />
         <VerticalSpace space="small" />
       </Container>
     )
@@ -109,11 +117,17 @@ class ScrollbarData extends ComponentData {
 
   getForm(): h.JSX.Element | null {
     const options: Array<DropdownOption> = Object.values(SliderDirection).map(v => ({ value: v }));
+    const [direction, setDirection] = useState<SliderDirection>(this.direction);
 
-    function setDirection(event: JSX.TargetedEvent<HTMLInputElement>) {
-      var scrollbar = metadata?.componentData as ScrollbarData;
-      scrollbar.direction = event.currentTarget.value as SliderDirection;
-      emitNodeUpdated();
+    function getScrollbar() {
+      return metadata?.componentData as ScrollbarData;
+    }
+
+    function handleDirectionInput(event: JSX.TargetedEvent<HTMLInputElement>) {
+      const value = event.currentTarget.value as SliderDirection;
+      setDirection(value);
+      getScrollbar().direction = value;
+      emitNodeUpdated(false);
     }
 
     return (
@@ -121,7 +135,7 @@ class ScrollbarData extends ComponentData {
         <VerticalSpace space="small" />
         <Text>Direction</Text>
         <VerticalSpace space="small" />
-        <Dropdown onChange={setDirection} options={options} value={this.direction} />
+        <Dropdown onChange={handleDirectionInput} options={options} value={direction} />
         <VerticalSpace space="small" />
       </Container>
     )
@@ -130,8 +144,8 @@ class ScrollbarData extends ComponentData {
 
 enum ScrollViewVisibility {
   Permanent = 'Permanent',
-  AutoHide = 'Auto Hide',
-  AutoHideAndExpandViewport = 'Auto Hide and Expand Viewport'
+  AutoHide = 'AutoHide',
+  AutoHideAndExpandViewport = 'AutoHideAndExpandViewport'
 }
 
 class ScrollViewData extends ComponentData {
@@ -144,17 +158,25 @@ class ScrollViewData extends ComponentData {
 
   getForm(): h.JSX.Element | null {
     const options: Array<DropdownOption> = Object.values(ScrollViewVisibility).map(v => ({ value: v }));
+    const [horizontalVisibility, setHorizontalVisibility] = useState<ScrollViewVisibility>(this.horizontalVisibility);
+    const [verticalVisibility, setVerticalVisibility] = useState<ScrollViewVisibility>(this.verticalVisibility);
 
-    function setHorizontalVisibility(event: JSX.TargetedEvent<HTMLInputElement>) {
-      var scrollView = metadata?.componentData as ScrollViewData;
-      scrollView.horizontalVisibility = event.currentTarget.value as ScrollViewVisibility;
-      emitNodeUpdated();
+    function getScrollView() {
+      return metadata?.componentData as ScrollViewData;
     }
 
-    function setVerticalVisibility(event: JSX.TargetedEvent<HTMLInputElement>) {
-      var scrollView = metadata?.componentData as ScrollViewData;
-      scrollView.verticalVisibility = event.currentTarget.value as ScrollViewVisibility;
-      emitNodeUpdated();
+    function handleHorizontalVisibilityInput(event: JSX.TargetedEvent<HTMLInputElement>) {
+      const value = event.currentTarget.value as ScrollViewVisibility;
+      setHorizontalVisibility(value);
+      getScrollView().horizontalVisibility = value;
+      emitNodeUpdated(false);
+    }
+
+    function handleVerticalVisibilityInput(event: JSX.TargetedEvent<HTMLInputElement>) {
+      const value = event.currentTarget.value as ScrollViewVisibility;
+      setVerticalVisibility(value);
+      getScrollView().verticalVisibility = value;
+      emitNodeUpdated(false);
     }
 
     return (
@@ -162,13 +184,13 @@ class ScrollViewData extends ComponentData {
         <VerticalSpace space="small" />
         <Text>Horizontal Scrollbar Visibility</Text>
         <VerticalSpace space="small" />
-        <Dropdown onChange={setHorizontalVisibility} options={options} value={this.horizontalVisibility} />
+        <Dropdown onChange={handleHorizontalVisibilityInput} options={options} value={horizontalVisibility} />
         <VerticalSpace space="small" />
 
         <VerticalSpace space="small" />
         <Text>Vertical Scrollbar Visibility</Text>
         <VerticalSpace space="small" />
-        <Dropdown onChange={setVerticalVisibility} options={options} value={this.verticalVisibility} />
+        <Dropdown onChange={handleVerticalVisibilityInput} options={options} value={verticalVisibility} />
         <VerticalSpace space="small" />
       </Container>
     )
@@ -191,43 +213,19 @@ class InputFieldData extends ComponentData {
   public caretColor: string = '323232';
   public caretColorOpacity: string = '100';
   public caretWidth: number = 1;
-
-  private setSelectionColor(event: JSX.TargetedEvent<HTMLInputElement>) {
-    var inputField = metadata?.componentData as InputFieldData;
-    inputField.selectionColor = event.currentTarget.value;
-    emitNodeUpdated();
-  }
-
-  private setSelectionColorOpacity(event: JSX.TargetedEvent<HTMLInputElement>) {
-    var inputField = metadata?.componentData as InputFieldData;
-    inputField.selectionColorOpacity = event.currentTarget.value;
-    emitNodeUpdated();
-  }
-
-  private setCaretColor(event: JSX.TargetedEvent<HTMLInputElement>) {
-    var inputField = metadata?.componentData as InputFieldData;
-    inputField.caretColor = event.currentTarget.value;
-    emitNodeUpdated();
-  }
-
-  private setCaretColorOpacity(event: JSX.TargetedEvent<HTMLInputElement>) {
-    var inputField = metadata?.componentData as InputFieldData;
-    inputField.caretColorOpacity = event.currentTarget.value;
-    emitNodeUpdated();
-  }
-
-  private setCaretWidth(event: JSX.TargetedEvent<HTMLInputElement>) {
-
-    var inputField = metadata?.componentData as InputFieldData;
-    inputField.caretWidth = parseInt(event.currentTarget.value);
-    emitNodeUpdated();
-  }
-
+  
   getType(): string {
     return 'InputField';
   }
 
   getForm(): h.JSX.Element | null {
+    const [selectionColor, setSelectionColor] = useState<string>(this.selectionColor);
+    const [selectionColorOpacity, setSelectionColorOpacity] = useState<string>(this.selectionColorOpacity);
+    
+    const [caretColor, setCaretColor] = useState<string>(this.caretColor);
+    const [caretColorOpacity, setCaretColorOpacity] = useState<string>(this.caretColorOpacity);
+    const [caretWidth, setCaretWidth] = useState<number>(this.caretWidth);
+
     const caretWidths: Array<DropdownOption<number>> = [
       {value: 1},
       {value: 2},
@@ -236,9 +234,38 @@ class InputFieldData extends ComponentData {
       {value: 5}
     ];
 
-    function handleInput(event: JSX.TargetedEvent<HTMLInputElement>) {
-      const newValue = event.currentTarget.value
-      console.log(newValue)
+    function getInputField() {
+      return metadata?.componentData as InputFieldData;
+    }
+
+    function handleSelectionColorInput(event: JSX.TargetedEvent<HTMLInputElement>) {
+      setSelectionColor(event.currentTarget.value);
+      getInputField().selectionColor = event.currentTarget.value;
+      emitNodeUpdated(false);
+    }
+
+    function handleSelectionColorOpacityInput(event: JSX.TargetedEvent<HTMLInputElement>) {
+      setSelectionColorOpacity(event.currentTarget.value);
+      getInputField().selectionColorOpacity = event.currentTarget.value;
+      emitNodeUpdated(false);
+    }
+
+    function handleCaretColorInput(event: JSX.TargetedEvent<HTMLInputElement>) {
+      setCaretColor(event.currentTarget.value);
+      getInputField().caretColor = event.currentTarget.value;
+      emitNodeUpdated(false);
+    }
+
+    function handleCaretColorOpacityInput(event: JSX.TargetedEvent<HTMLInputElement>) {
+      setCaretColorOpacity(event.currentTarget.value);
+      getInputField().caretColorOpacity = event.currentTarget.value;
+      emitNodeUpdated(false);
+    }
+
+    function handleCaretWidthInput(value: number) {
+      setCaretWidth(value);
+      getInputField().caretWidth = value;
+      emitNodeUpdated(false);
     }
 
     return (
@@ -246,19 +273,19 @@ class InputFieldData extends ComponentData {
         <VerticalSpace space="small" />
         <Text>Selection Color</Text>
         <VerticalSpace space="small" />
-        <TextboxColor hexColor={this.selectionColor} onHexColorInput={this.setSelectionColor} onOpacityInput={this.setSelectionColorOpacity} opacity={this.selectionColorOpacity} revertOnEscapeKeyDown/>
+        <TextboxColor hexColor={selectionColor} onHexColorInput={handleSelectionColorInput} onOpacityInput={handleSelectionColorOpacityInput} opacity={selectionColorOpacity} revertOnEscapeKeyDown/>
         <VerticalSpace space="small" />
 
         <VerticalSpace space="small" />
         <Text>Caret Color</Text>
         <VerticalSpace space="small" />
-        <TextboxColor hexColor={this.caretColor} onHexColorInput={this.setCaretColor} onOpacityInput={this.setCaretColorOpacity} opacity={this.caretColorOpacity} revertOnEscapeKeyDown/>
+        <TextboxColor hexColor={caretColor} onHexColorInput={handleCaretColorInput} onOpacityInput={handleCaretColorOpacityInput} opacity={caretColorOpacity} revertOnEscapeKeyDown/>
         <VerticalSpace space="small" />
 
         <VerticalSpace space="small" />
         <Text>Caret Width</Text>
         <VerticalSpace space="small" />
-        <Dropdown options={caretWidths} onChange={this.setCaretWidth} value={this.caretWidth} />
+        <Dropdown options={caretWidths} onValueChange={handleCaretWidthInput} value={caretWidth} />
       </Container>
     )
   }
@@ -335,13 +362,20 @@ function Plugin(data: { metadataJson: string} ) {
 
     if (componentForm != null)
     {
+      layout.push(
+        <Container>
+          <VerticalSpace space="small" />
+          <Divider />
+          <VerticalSpace space="small" />
+        </Container>
+        );
       layout.push(componentForm);
     }
 
     layout.push(
       <Container>
         <VerticalSpace space="small" />
-        <Button onClick={clearComponentData}>Revert to Default</Button>
+        <Button fullWidth onClick={clearComponentData}>Revert to Default</Button>
         <VerticalSpace space="small" />
       </Container>
     );
@@ -349,7 +383,7 @@ function Plugin(data: { metadataJson: string} ) {
     layout.push(
       <Container>
       <VerticalSpace space="small" />
-      <Text>Select a node.</Text>
+      <Banner icon={<IconInfo32 />}>Select a node.</Banner>
       <VerticalSpace space="small" />
     </Container>
     );
@@ -359,7 +393,7 @@ function Plugin(data: { metadataJson: string} ) {
     if (metadata)
     {
       metadata.componentData = null;
-      emitNodeUpdated();
+      emitNodeUpdated(true);
     }
   }
 
@@ -367,7 +401,7 @@ function Plugin(data: { metadataJson: string} ) {
     if (metadata)
     {
       metadata.bindingKey = event.currentTarget.value;
-      emitNodeUpdated();
+      emitNodeUpdated(false);
     }
   }
 
@@ -375,7 +409,7 @@ function Plugin(data: { metadataJson: string} ) {
     if (metadata)
     {
       metadata.localizationKey = event.currentTarget.value;
-      emitNodeUpdated();
+      emitNodeUpdated(false);
     }
   }
 
@@ -383,11 +417,11 @@ function Plugin(data: { metadataJson: string} ) {
     if (metadata)
     {
       metadata.componentType = event.currentTarget.value;
-      emitNodeUpdated();
+      emitNodeUpdated(true);
     }
   }
 
-  function onWindowResize(windowSize: { width: number; height: number }) {
+  /*function onWindowResize(windowSize: { width: number; height: number }) {
     emit('RESIZE_WINDOW', windowSize)
   }
 
@@ -396,7 +430,7 @@ function Plugin(data: { metadataJson: string} ) {
     minHeight: 240,
     maxWidth: 320,
     maxHeight: 500
-  })
+  })*/
 
   return (<Container>{layout}</Container>)
 }
