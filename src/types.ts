@@ -22,7 +22,7 @@ export class NodeMetadata {
   public bindingKey: string;
   public localizationKey: string;
   public componentType: string;
-  public componentData: string;
+  public componentData: object | null;
 
   constructor() {
     this.id = '';
@@ -30,7 +30,7 @@ export class NodeMetadata {
     this.bindingKey = '';
     this.localizationKey = '';
     this.componentType = '';
-    this.componentData = '';
+    this.componentData = null;
   }
 }
 

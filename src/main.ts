@@ -29,14 +29,15 @@ export default function () {
   })
 
   refreshUI();
-  //setSelectedNode(node);
 }
 
 function refreshUI()
 {
-  console.log('refreh UI');
   var node = figma.currentPage.selection[0];
   const metadataJson = serializeMetadata(createMetadataFromNode(node));
+
+  console.log('Selected node: ' + metadataJson);
+
   const options = { width: 240, height: 500 };
   showUI(options, {metadataJson: metadataJson});
 }
@@ -51,9 +52,12 @@ function createMetadataFromNode(node:SceneNode | null): NodeMetadata | null {
     metadata.bindingKey = node.getPluginData(pluginData.bindingKey);
     metadata.localizationKey = node.getPluginData(pluginData.localizationKey);
     metadata.componentType = node.getPluginData(pluginData.componentType);
-    metadata.componentData = node.getPluginData(pluginData.componentData);
 
-
+    try {
+      var componentData = JSON.parse(node.getPluginData(pluginData.componentData));
+      metadata.componentData = componentData;
+    } catch(e) {}
+  
     return metadata;
   }
 
@@ -67,6 +71,6 @@ function updateNodeByMetadata(node: SceneNode, metadata: NodeMetadata | null)
     node.setPluginData(pluginData.bindingKey, metadata.bindingKey ? metadata.bindingKey : '');
     node.setPluginData(pluginData.localizationKey, metadata.localizationKey ? metadata.localizationKey : '');
     node.setPluginData(pluginData.componentType, metadata.componentType ? metadata.componentType : '');
-    node.setPluginData(pluginData.componentData, metadata.componentData ? metadata.componentData : '');
+    node.setPluginData(pluginData.componentData, metadata.componentData ? JSON.stringify(metadata.componentData) : '');
   }
 }
