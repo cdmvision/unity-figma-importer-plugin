@@ -329,7 +329,8 @@ function Plugin(data: { metadataJson: string} ) {
         </Container>
     );
   
-    if (metadata.type == 'TEXT')
+    const isText: boolean = metadata.type == 'TEXT';
+    if (isText)
     {
       layout.push(
         <Container>
@@ -342,19 +343,37 @@ function Plugin(data: { metadataJson: string} ) {
       );
     }
   
-    if (metadata.type == 'COMPONENT_SET' || metadata.type == 'COMPONENT' || metadata.type == 'INSTANCE')
+    const isComponent: boolean = metadata.type == 'COMPONENT';
+    const isComponentSet: boolean = metadata.type == 'COMPONENT_SET';
+    const isInstance: boolean = metadata.type == 'INSTANCE';
+
+    if (isComponentSet || isComponent)
     {
       const options: Array<TextboxAutocompleteOption> = [];
       components.forEach(component => {
         options.push({ value: component.getType() });
       });
 
+
       layout.push(
         <Container>
         <VerticalSpace space="small" />
         <Text>Component Type</Text>
         <VerticalSpace space="small" />
-        <TextboxAutocomplete id={pluginData.componentType} onInput={setComponentType} value={metadata != null ? metadata.componentType : ''} options={options}/>
+        <TextboxAutocomplete id={pluginData.componentType} onInput={setComponentType} value={metadata != null ? metadata.componentType : ''} options={options} />
+        <VerticalSpace space="small" />
+      </Container>
+      );
+    }
+
+    if (isInstance)
+    {
+      layout.push(
+        <Container>
+        <VerticalSpace space="small" />
+        <Text>Component Type</Text>
+        <VerticalSpace space="small" />
+        <Textbox id={pluginData.componentType} onInput={setComponentType} value={metadata != null ? metadata.componentType : ''} disabled />
         <VerticalSpace space="small" />
       </Container>
       );
