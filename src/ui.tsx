@@ -312,11 +312,19 @@ function Plugin(data: { metadataJson: string} ) {
     ];
 
     let componentForm: JSX.Element | null = null;
-    var component = components.find(x => x.getType() == metadata?.componentType);
-    if (component)
+
+    const isComponent: boolean = metadata.type == 'COMPONENT';
+    const isComponentSet: boolean = metadata.type == 'COMPONENT_SET';
+    const isInstance: boolean = metadata.type == 'INSTANCE';
+
+    if (isComponent || isComponentSet)
     {
-      component.updateData();
-      componentForm = component.getForm();
+      var component = components.find(x => x.getType() == metadata?.componentType);
+      if (component)
+      {
+        component.updateData();
+        componentForm = component.getForm();
+      }
     }
 
     layout.push(
@@ -342,10 +350,7 @@ function Plugin(data: { metadataJson: string} ) {
       </Container>
       );
     }
-  
-    const isComponent: boolean = metadata.type == 'COMPONENT';
-    const isComponentSet: boolean = metadata.type == 'COMPONENT_SET';
-    const isInstance: boolean = metadata.type == 'INSTANCE';
+
 
     if (isComponentSet || isComponent)
     {
