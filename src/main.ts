@@ -12,7 +12,7 @@ export default function () {
   });
 
   on(events.selectedNodeUpdated, function (metadataStr: string, repaint: boolean) {
-    var node = figma.currentPage.selection[0];
+    const node = getSelectedNode();
     const metadata = deserializeMetadata(metadataStr);
     updateNodeByMetadata(node, metadata);
 
@@ -40,18 +40,23 @@ export default function () {
 
 function refreshUI()
 {
-  var node:BaseNode = figma.currentPage.selection[0];
-  if (!node)
-  {
-    node = figma.currentPage;
-  }
-
+  const node = getSelectedNode();
   const metadataJson = serializeMetadata(createMetadataFromNode(node));
 
   console.log('Selected node: ' + metadataJson);
 
   const options = { width: 240, height: 440 };
   showUI(options, {metadataJson: metadataJson});
+}
+
+function getSelectedNode()
+{
+  var node:BaseNode = figma.currentPage.selection[0];
+  if (!node)
+  {
+    node = figma.currentPage;
+  }
+  return node;
 }
 
 function createMetadataFromNode(node:BaseNode | null): NodeMetadata | null {

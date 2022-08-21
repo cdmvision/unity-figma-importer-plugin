@@ -1,20 +1,19 @@
 import {
-  useWindowResize,
   Container,
   render,
+  Bold,
   Text,
   Textbox,
   VerticalSpace,
   TextboxAutocomplete,
   TextboxAutocompleteOption,
   TextboxColor,
-  TextboxNumeric,
   DropdownOption,
   Dropdown,
   Button,
   IconInfo32,
   Banner,
-  Divider,
+  Divider
 } from '@create-figma-plugin/ui'
 
 import { emit } from '@create-figma-plugin/utilities'
@@ -330,7 +329,7 @@ function Plugin(data: { metadataJson: string} ) {
     layout.push(
       <Container space='small'>
       <VerticalSpace space="large" />
-        <Text align="left" style={{fontWeight: '700'}}>{metadata != null ? metadata.name : ''} ({metadata != null ? metadata.type : ''})</Text>
+        <Text align="left"><Bold>{metadata != null ? metadata.name : ''} ({metadata != null ? metadata.type : ''})</Bold></Text>
         <VerticalSpace space="small" />
       </Container>
     );
@@ -464,7 +463,7 @@ function Plugin(data: { metadataJson: string} ) {
     maxHeight: 500
   })*/
 
-  return (<Container space='small'>{layout}</Container>)
+  return (<Container space='extraSmall'>{layout}</Container>)
 }
 
 export default render(Plugin);
