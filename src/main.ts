@@ -7,6 +7,10 @@ export default function () {
     refreshUI();
   });
 
+  figma.on('currentpagechange', function () {
+    refreshUI();
+  });
+
   on(events.selectedNodeUpdated, function (metadataStr: string, repaint: boolean) {
     var node = figma.currentPage.selection[0];
     const metadata = deserializeMetadata(metadataStr);
@@ -36,7 +40,12 @@ export default function () {
 
 function refreshUI()
 {
-  var node = figma.currentPage.selection[0];
+  var node:BaseNode = figma.currentPage.selection[0];
+  if (!node)
+  {
+    node = figma.currentPage;
+  }
+
   const metadataJson = serializeMetadata(createMetadataFromNode(node));
 
   console.log('Selected node: ' + metadataJson);
@@ -45,12 +54,13 @@ function refreshUI()
   showUI(options, {metadataJson: metadataJson});
 }
 
-function createMetadataFromNode(node:SceneNode | null): NodeMetadata | null {
+function createMetadataFromNode(node:BaseNode | null): NodeMetadata | null {
   if (node != null)
   {
     let metadata =  new NodeMetadata();
     metadata.id = node.id;
     metadata.type = node.type;
+    metadata.name = node.name;
     metadata.bindingKey = node.getPluginData(pluginData.bindingKey);
     metadata.localizationKey = node.getPluginData(pluginData.localizationKey);
     metadata.componentType = node.getPluginData(pluginData.componentType);

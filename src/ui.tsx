@@ -329,7 +329,15 @@ function Plugin(data: { metadataJson: string} ) {
 
     layout.push(
       <Container>
-          <VerticalSpace space="large" />
+      <VerticalSpace space="large" />
+        <Text align="left" style={{fontWeight: '700'}}>{metadata != null ? metadata.name : ''} ({metadata != null ? metadata.type : ''})</Text>
+        <VerticalSpace space="small" />
+      </Container>
+    );
+
+    layout.push(
+      <Container>
+          <VerticalSpace space="small" />
           <Text>Binding Key</Text>
           <VerticalSpace space="small" />
           <Textbox id={pluginData.bindingKey} onChange={setBindingKey} value={metadata != null ? metadata.bindingKey : ''}/>

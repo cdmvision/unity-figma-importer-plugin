@@ -14,6 +14,7 @@ export const pluginData = {
 export class NodeMetadata {
   public id: string;
   public type: string;
+  public name: string;
   public bindingKey: string;
   public localizationKey: string;
   public componentType: string;
@@ -22,6 +23,7 @@ export class NodeMetadata {
   constructor() {
     this.id = '';
     this.type = '';
+    this.name = '';
     this.bindingKey = '';
     this.localizationKey = '';
     this.componentType = '';
