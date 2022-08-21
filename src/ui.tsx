@@ -97,8 +97,8 @@ class SliderData extends ComponentData {
     }
 
     return (
-      <Container>
-        <VerticalSpace space="small" />
+      <Container space='small'>
+        <VerticalSpace space='small' />
         <Text>Direction</Text>
         <VerticalSpace space="small" />
         <Dropdown onChange={handleDirectionInput} options={options} value={direction} />
@@ -131,7 +131,7 @@ class ScrollbarData extends ComponentData {
     }
 
     return (
-      <Container>
+      <Container space='small'>
         <VerticalSpace space="small" />
         <Text>Direction</Text>
         <VerticalSpace space="small" />
@@ -180,7 +180,7 @@ class ScrollViewData extends ComponentData {
     }
 
     return (
-      <Container>
+      <Container space='small'>
         <VerticalSpace space="small" />
         <Text>Horizontal Scrollbar Visibility</Text>
         <VerticalSpace space="small" />
@@ -269,7 +269,7 @@ class InputFieldData extends ComponentData {
     }
 
     return (
-      <Container>
+      <Container space='small'>
         <VerticalSpace space="small" />
         <Text>Selection Color</Text>
         <VerticalSpace space="small" />
@@ -328,7 +328,7 @@ function Plugin(data: { metadataJson: string} ) {
     }
 
     layout.push(
-      <Container>
+      <Container space='small'>
       <VerticalSpace space="large" />
         <Text align="left" style={{fontWeight: '700'}}>{metadata != null ? metadata.name : ''} ({metadata != null ? metadata.type : ''})</Text>
         <VerticalSpace space="small" />
@@ -336,11 +336,11 @@ function Plugin(data: { metadataJson: string} ) {
     );
 
     layout.push(
-      <Container>
+      <Container space='small'>
           <VerticalSpace space="small" />
           <Text>Binding Key</Text>
           <VerticalSpace space="small" />
-          <Textbox id={pluginData.bindingKey} onChange={setBindingKey} value={metadata != null ? metadata.bindingKey : ''}/>
+          <Textbox variant="border" id={pluginData.bindingKey} onChange={setBindingKey} value={metadata != null ? metadata.bindingKey : ''}/>
           <VerticalSpace space="small" />
         </Container>
     );
@@ -349,11 +349,11 @@ function Plugin(data: { metadataJson: string} ) {
     if (isText)
     {
       layout.push(
-        <Container>
+        <Container space='small'>
         <VerticalSpace space="small" />
         <Text>Localization Key</Text>
         <VerticalSpace space="small" />
-        <Textbox id={pluginData.localizationKey} onChange={setLocalizationKey} value={metadata != null ? metadata.localizationKey : ''}/>
+        <Textbox variant="border" id={pluginData.localizationKey} onChange={setLocalizationKey} value={metadata != null ? metadata.localizationKey : ''}/>
         <VerticalSpace space="small" />
       </Container>
       );
@@ -369,11 +369,11 @@ function Plugin(data: { metadataJson: string} ) {
 
 
       layout.push(
-        <Container>
+        <Container space='small'>
         <VerticalSpace space="small" />
         <Text>Component Type</Text>
         <VerticalSpace space="small" />
-        <TextboxAutocomplete id={pluginData.componentType} onInput={setComponentType} value={metadata != null ? metadata.componentType : ''} options={options} />
+        <TextboxAutocomplete variant="border" id={pluginData.componentType} onInput={setComponentType} value={metadata != null ? metadata.componentType : ''} options={options} />
         <VerticalSpace space="small" />
       </Container>
       );
@@ -382,11 +382,11 @@ function Plugin(data: { metadataJson: string} ) {
     if (isInstance)
     {
       layout.push(
-        <Container>
+        <Container space="small">
         <VerticalSpace space="small" />
         <Text>Component Type</Text>
         <VerticalSpace space="small" />
-        <Textbox id={pluginData.componentType} onInput={setComponentType} value={metadata != null ? metadata.componentType : ''} disabled />
+        <Textbox variant="border" id={pluginData.componentType} onInput={setComponentType} value={metadata != null ? metadata.componentType : ''} disabled />
         <VerticalSpace space="small" />
       </Container>
       );
@@ -395,7 +395,7 @@ function Plugin(data: { metadataJson: string} ) {
     if (componentForm != null)
     {
       layout.push(
-        <Container>
+        <Container space='small'>
           <VerticalSpace space="small" />
           <Divider />
           <VerticalSpace space="small" />
@@ -405,7 +405,7 @@ function Plugin(data: { metadataJson: string} ) {
     }
 
     layout.push(
-      <Container>
+      <Container space='small'>
         <VerticalSpace space="small" />
         <Button fullWidth onClick={clearComponentData}>Revert to Default</Button>
         <VerticalSpace space="small" />
@@ -413,7 +413,7 @@ function Plugin(data: { metadataJson: string} ) {
     );
   } else {
     layout.push(
-      <Container>
+      <Container space='small'>
       <VerticalSpace space="small" />
       <Banner icon={<IconInfo32 />}>Select a node.</Banner>
       <VerticalSpace space="small" />
@@ -464,7 +464,7 @@ function Plugin(data: { metadataJson: string} ) {
     maxHeight: 500
   })*/
 
-  return (<Container>{layout}</Container>)
+  return (<Container space='small'>{layout}</Container>)
 }
 
 export default render(Plugin);

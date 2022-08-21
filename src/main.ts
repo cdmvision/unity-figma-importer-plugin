@@ -88,13 +88,12 @@ function createMetadataFromNode(node:BaseNode | null): NodeMetadata | null {
   return null;
 }
 
-function updateNodeByMetadata(node: SceneNode, metadata: NodeMetadata | null)
+function updateNodeByMetadata(node: BaseNode, metadata: NodeMetadata | null)
 {
   if (metadata != null)
   {
     node.setPluginData(pluginData.bindingKey, metadata.bindingKey ? metadata.bindingKey : '');
     node.setPluginData(pluginData.localizationKey, metadata.localizationKey ? metadata.localizationKey : '');
-
     node.setPluginData(pluginData.componentData, metadata.componentData ? JSON.stringify(metadata.componentData) : '');
 
     if (node.type == 'COMPONENT_SET' || node.type == 'COMPONENT')
