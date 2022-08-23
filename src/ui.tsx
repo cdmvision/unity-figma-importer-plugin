@@ -11,6 +11,7 @@ import {
   DropdownOption,
   Dropdown,
   Button,
+  Inline,
   IconInfo32,
   Banner,
   Divider
@@ -96,7 +97,7 @@ class SliderData extends ComponentData {
     }
 
     return (
-      <Container space='small'>
+      <Container space='extraSmall'>
         <VerticalSpace space='small' />
         <Text>Direction</Text>
         <VerticalSpace space="small" />
@@ -130,7 +131,7 @@ class ScrollbarData extends ComponentData {
     }
 
     return (
-      <Container space='small'>
+      <Container space='extraSmall'>
         <VerticalSpace space="small" />
         <Text>Direction</Text>
         <VerticalSpace space="small" />
@@ -179,7 +180,7 @@ class ScrollViewData extends ComponentData {
     }
 
     return (
-      <Container space='small'>
+      <Container space='extraSmall'>
         <VerticalSpace space="small" />
         <Text>Horizontal Scrollbar Visibility</Text>
         <VerticalSpace space="small" />
@@ -268,7 +269,7 @@ class InputFieldData extends ComponentData {
     }
 
     return (
-      <Container space='small'>
+      <Container space='extraSmall'>
         <VerticalSpace space="small" />
         <Text>Selection Color</Text>
         <VerticalSpace space="small" />
@@ -290,6 +291,170 @@ class InputFieldData extends ComponentData {
   }
 }
 
+function drawTitleField(): h.JSX.Element | null {
+  if (metadata != null)
+  {
+    return (
+      <Container space='small'>
+      <VerticalSpace space="large" />
+        <Text align="left"><Bold>{metadata.name} ({metadata.type})</Bold></Text>
+        <VerticalSpace space="small" />
+      </Container>
+    )
+  }
+
+  return null;
+}
+
+function drawBindingKeyField(): h.JSX.Element | null {
+  const [bindingKey, setBindingKey] = useState<string>(metadata != null ? metadata.bindingKey : '');
+  
+  function handleInput(event: JSX.TargetedEvent<HTMLInputElement>) {
+    if (metadata != null)
+    {
+      metadata.bindingKey = event.currentTarget.value;
+      setBindingKey(metadata.bindingKey);
+      emitNodeUpdated(false);
+    }
+  }
+
+  return (
+    <Container space='small'>
+      <VerticalSpace space="small" />
+      <Text>Binding Key</Text>
+      <VerticalSpace space="small" />
+      <Textbox variant="border" onChange={handleInput} value={bindingKey}/>
+      <VerticalSpace space="small" />
+    </Container>
+  )
+}
+
+function drawLocalizationKeyField(): h.JSX.Element | null {
+  const [localizationKey, setLocalizationKey] = useState<string>(metadata != null ? metadata.localizationKey : '');
+  
+  function handleInput(event: JSX.TargetedEvent<HTMLInputElement>) {
+    if (metadata != null)
+    {
+      metadata.localizationKey = event.currentTarget.value;
+      setLocalizationKey(metadata.localizationKey);
+      emitNodeUpdated(false);
+    }
+  }
+
+  const isText: boolean = metadata == null ? false : metadata.type == 'TEXT';
+  if (isText)
+  {
+    return (
+      <Container space='small'>
+        <VerticalSpace space="small" />
+        <Text>Localization Key</Text>
+        <VerticalSpace space="small" />
+        <Textbox variant="border" onChange={handleInput} value={localizationKey}/>
+        <VerticalSpace space="small" />
+      </Container>
+    )
+  }
+  
+  return null;
+}
+
+function drawTagsField(): h.JSX.Element | null {
+  const [tags, setTags] = useState<string>(metadata != null ? metadata.tags : '');
+  
+  function handleInput(event: JSX.TargetedEvent<HTMLInputElement>) {
+    if (metadata != null)
+    {
+      metadata.tags = event.currentTarget.value;
+      setTags(metadata.tags);
+      emitNodeUpdated(false);
+    }
+  }
+
+  return (
+    <Container space='small'>
+      <VerticalSpace space="small" />
+      <Text>Tags</Text>
+      <VerticalSpace space="small" />
+      <Textbox variant="border" onChange={handleInput} value={tags}/>
+      <VerticalSpace space="small" />
+    </Container>
+  )
+}
+
+function drawComponentTypeField() : h.JSX.Element | null {
+  const [componentType, setComponentType] = useState<string>(metadata != null ? metadata.componentType : '');
+  
+  const options: Array<TextboxAutocompleteOption> = [];
+
+  const components: Array<ComponentData> = [
+    new ButtonData(),
+    new ToggleData(),
+    new InputFieldData(),
+    new DropdownData(),
+    new SliderData(),
+    new ScrollViewData(),
+    new ScrollbarData(),
+  ];
+
+  components.forEach(component => {
+    options.push({ value: component.getType() });
+  });
+
+
+  const isComponent: boolean = metadata == null ? false : metadata.type == 'COMPONENT';
+  const isComponentSet: boolean = metadata == null ? false : metadata.type == 'COMPONENT_SET';
+  const isInstance: boolean = metadata == null ? false : metadata.type == 'INSTANCE';
+
+  let componentForm: JSX.Element | null = null;
+
+  if (isComponent || isComponentSet)
+  {
+    var component = components.find(x => x.getType() == metadata?.componentType);
+    if (component)
+    {
+      component.updateData();
+      componentForm = component.getForm();
+    }
+  }
+
+  function handleInput(event: JSX.TargetedEvent<HTMLInputElement>) {
+    if (metadata != null)
+    {
+      metadata.componentType = event.currentTarget.value;
+      setComponentType(metadata.componentType);
+      emitNodeUpdated(true);
+    }
+  }
+
+  if (isComponentSet || isComponent)
+  {
+    return (
+      <Container space='small'>
+        <VerticalSpace space="small" />
+        <Text>Component Type</Text>
+        <VerticalSpace space="small" />
+        <TextboxAutocomplete variant="border" onInput={handleInput} value={componentType} options={options} />
+        <VerticalSpace space="medium" />
+        {componentForm != null ? componentForm: null}
+      </Container>
+    )
+  }
+  else if (isInstance)
+  {
+    return (
+      <Container space="small">
+        <VerticalSpace space="small" />
+        <Text>Component Type</Text>
+        <VerticalSpace space="small" />
+        <Textbox variant="border" value={componentType} disabled />
+        <VerticalSpace space="small" />
+      </Container>
+    );
+  }
+
+  return null;
+}
+
 function Plugin(data: { metadataJson: string} ) {
 
   const layout: Array<JSX.Element> = [];
@@ -299,108 +464,34 @@ function Plugin(data: { metadataJson: string} ) {
 
   if (metadata != null)
   {
-    // Initialize components.
-    const components: Array<ComponentData> = [
-      new ButtonData(),
-      new ToggleData(),
-      new InputFieldData(),
-      new DropdownData(),
-      new SliderData(),
-      new ScrollViewData(),
-      new ScrollbarData(),
-    ];
-
-    let componentForm: JSX.Element | null = null;
-
-    const isComponent: boolean = metadata.type == 'COMPONENT';
-    const isComponentSet: boolean = metadata.type == 'COMPONENT_SET';
-    const isInstance: boolean = metadata.type == 'INSTANCE';
-
-    if (isComponent || isComponentSet)
+    var titleField = drawTitleField();
+    if (titleField != null)
     {
-      var component = components.find(x => x.getType() == metadata?.componentType);
-      if (component)
-      {
-        component.updateData();
-        componentForm = component.getForm();
-      }
+      layout.push(titleField);
     }
 
-    layout.push(
-      <Container space='small'>
-      <VerticalSpace space="large" />
-        <Text align="left"><Bold>{metadata != null ? metadata.name : ''} ({metadata != null ? metadata.type : ''})</Bold></Text>
-        <VerticalSpace space="small" />
-      </Container>
-    );
-
-    layout.push(
-      <Container space='small'>
-          <VerticalSpace space="small" />
-          <Text>Binding Key</Text>
-          <VerticalSpace space="small" />
-          <Textbox variant="border" id={pluginData.bindingKey} onChange={setBindingKey} value={metadata != null ? metadata.bindingKey : ''}/>
-          <VerticalSpace space="small" />
-        </Container>
-    );
-  
-    const isText: boolean = metadata.type == 'TEXT';
-    if (isText)
+    var bindingKeyField = drawBindingKeyField();
+    if (bindingKeyField != null)
     {
-      layout.push(
-        <Container space='small'>
-        <VerticalSpace space="small" />
-        <Text>Localization Key</Text>
-        <VerticalSpace space="small" />
-        <Textbox variant="border" id={pluginData.localizationKey} onChange={setLocalizationKey} value={metadata != null ? metadata.localizationKey : ''}/>
-        <VerticalSpace space="small" />
-      </Container>
-      );
+      layout.push(bindingKeyField);
+    }
+    
+    var localizationKeyField = drawLocalizationKeyField();
+    if (localizationKeyField != null)
+    {
+      layout.push(localizationKeyField);
     }
 
-
-    if (isComponentSet || isComponent)
+    var componenTypeField = drawComponentTypeField();
+    if (componenTypeField != null)
     {
-      const options: Array<TextboxAutocompleteOption> = [];
-      components.forEach(component => {
-        options.push({ value: component.getType() });
-      });
-
-
-      layout.push(
-        <Container space='small'>
-        <VerticalSpace space="small" />
-        <Text>Component Type</Text>
-        <VerticalSpace space="small" />
-        <TextboxAutocomplete variant="border" id={pluginData.componentType} onInput={setComponentType} value={metadata != null ? metadata.componentType : ''} options={options} />
-        <VerticalSpace space="small" />
-      </Container>
-      );
+      layout.push(componenTypeField);
     }
 
-    if (isInstance)
+    var tagsField = drawTagsField();
+    if (tagsField != null)
     {
-      layout.push(
-        <Container space="small">
-        <VerticalSpace space="small" />
-        <Text>Component Type</Text>
-        <VerticalSpace space="small" />
-        <Textbox variant="border" id={pluginData.componentType} onInput={setComponentType} value={metadata != null ? metadata.componentType : ''} disabled />
-        <VerticalSpace space="small" />
-      </Container>
-      );
-    }
-
-    if (componentForm != null)
-    {
-      layout.push(
-        <Container space='small'>
-          <VerticalSpace space="small" />
-          <Divider />
-          <VerticalSpace space="small" />
-        </Container>
-        );
-      layout.push(componentForm);
+      layout.push(tagsField);
     }
 
     layout.push(
@@ -428,27 +519,11 @@ function Plugin(data: { metadataJson: string} ) {
     }
   }
 
-  function setBindingKey(event: JSX.TargetedEvent<HTMLInputElement>) {
+  function setTags(event: JSX.TargetedEvent<HTMLInputElement>) {
     if (metadata)
     {
-      metadata.bindingKey = event.currentTarget.value;
+      metadata.tags = event.currentTarget.value;
       emitNodeUpdated(false);
-    }
-  }
-
-  function setLocalizationKey(event: JSX.TargetedEvent<HTMLInputElement>) {
-    if (metadata)
-    {
-      metadata.localizationKey = event.currentTarget.value;
-      emitNodeUpdated(false);
-    }
-  }
-
-  function setComponentType(event: JSX.TargetedEvent<HTMLInputElement>) {
-    if (metadata)
-    {
-      metadata.componentType = event.currentTarget.value;
-      emitNodeUpdated(true);
     }
   }
 

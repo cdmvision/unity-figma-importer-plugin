@@ -8,7 +8,8 @@ export const pluginData = {
   bindingKey: 'bindingKey', 
   localizationKey: 'localizationKey',
   componentType: 'componentType',
-  componentData: 'componentData'
+  componentData: 'componentData',
+  tags: 'tags',
 };
 
 export class NodeMetadata {
@@ -19,6 +20,7 @@ export class NodeMetadata {
   public localizationKey: string;
   public componentType: string;
   public componentData: object | null;
+  public tags: string;
 
   constructor() {
     this.id = '';
@@ -28,6 +30,7 @@ export class NodeMetadata {
     this.localizationKey = '';
     this.componentType = '';
     this.componentData = null;
+    this.tags = '';
   }
 }
 

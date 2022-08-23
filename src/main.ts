@@ -69,6 +69,7 @@ function createMetadataFromNode(node:BaseNode | null): NodeMetadata | null {
     metadata.bindingKey = node.getPluginData(pluginData.bindingKey);
     metadata.localizationKey = node.getPluginData(pluginData.localizationKey);
     metadata.componentType = node.getPluginData(pluginData.componentType);
+    metadata.tags = node.getPluginData(pluginData.tags);
 
     if (node.type == 'INSTANCE' && node.mainComponent != null)
     {
@@ -99,12 +100,14 @@ function updateNodeByMetadata(node: BaseNode, metadata: NodeMetadata | null)
   {
     node.setPluginData(pluginData.bindingKey, metadata.bindingKey ? metadata.bindingKey : '');
     node.setPluginData(pluginData.localizationKey, metadata.localizationKey ? metadata.localizationKey : '');
+    node.setPluginData(pluginData.tags, metadata.tags ? metadata.tags : '');
     node.setPluginData(pluginData.componentData, metadata.componentData ? JSON.stringify(metadata.componentData) : '');
 
     if (node.type == 'COMPONENT_SET' || node.type == 'COMPONENT')
     {
       node.setPluginData(pluginData.componentType, metadata.componentType ? metadata.componentType : '');
     }
+
 
     console.log('Selected node updated: ' + serializeMetadata(metadata));
   }
