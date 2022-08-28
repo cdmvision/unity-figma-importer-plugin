@@ -54,6 +54,16 @@ export abstract class ComponentData {
   abstract getForm(): h.JSX.Element | null;
 }
 
+export class SelectableData extends ComponentData {
+  getType(): string {
+    return 'Selectable';
+  }
+
+  getForm(): h.JSX.Element | null {
+    return null;
+  }
+}
+
 export class ButtonData extends ComponentData {
   getType(): string {
     return 'Button';
@@ -387,6 +397,7 @@ function drawComponentTypeField() : h.JSX.Element | null {
   const options: Array<TextboxAutocompleteOption> = [];
 
   const components: Array<ComponentData> = [
+    new SelectableData(),
     new ButtonData(),
     new ToggleData(),
     new InputFieldData(),
