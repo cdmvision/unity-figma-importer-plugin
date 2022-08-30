@@ -1,5 +1,6 @@
 import {
   Container,
+  Columns,
   render,
   Bold,
   Text,
@@ -12,9 +13,13 @@ import {
   Dropdown,
   Button,
   Inline,
+  IconButton,
+  IconTarget32,
+  IconSwap32,
   IconInfo32,
   Banner,
-  Divider
+  Disclosure,
+  IconWarning32
 } from '@create-figma-plugin/ui'
 
 import { emit } from '@create-figma-plugin/utilities'
@@ -391,6 +396,46 @@ function drawTagsField(): h.JSX.Element | null {
   )
 }
 
+function drawWarningsField(): h.JSX.Element | null {
+  const [expand, setExpand] = useState<boolean>(false);
+
+  function handleClick(event: JSX.TargetedMouseEvent<HTMLInputElement>) {
+    setExpand(!(expand === true))
+  }
+
+  function goToNode(nodeId: string) {
+    emit(events.selectNode, nodeId);
+  }
+
+  if (metadata != null && metadata.warnings.length > 0)
+  {
+    const layout: Array<JSX.Element> = [];
+
+    if (metadata.type === 'PAGE') {
+      metadata.warnings.forEach(warning => {
+        layout.push(<Inline space='extraSmall'><IconButton onClick={() => goToNode(warning.nodeId)} title="Select element"><IconTarget32/></IconButton><Text height={32}>{warning.nodeName}</Text></Inline>);
+      });
+
+      const style = { height: '64px' }
+      return (
+        <div style={style}>
+          <Disclosure onClick={handleClick} open={expand} title={'Warnings (' + metadata.warnings.length + ')'}>
+            {layout}
+          </Disclosure>
+        </div>
+      )
+    }
+    
+    metadata.warnings.forEach(warning => {
+      layout.push(<div>{warning.message}</div>);
+    });
+
+    return (<Banner icon={<IconWarning32 />} variant="warning">{layout}</Banner>)
+  }
+
+  return null;
+}
+
 function drawComponentTypeField() : h.JSX.Element | null {
   const [componentType, setComponentType] = useState<string>(metadata != null ? metadata.componentType : '');
   
@@ -437,6 +482,13 @@ function drawComponentTypeField() : h.JSX.Element | null {
     }
   }
 
+  function clearComponentData(event: JSX.TargetedMouseEvent<HTMLButtonElement>) {
+    if (metadata != null) {
+      metadata.componentData = null;
+      emitNodeUpdated(true);
+    }
+  }
+
   if (isComponentSet || isComponent)
   {
     return (
@@ -444,7 +496,12 @@ function drawComponentTypeField() : h.JSX.Element | null {
         <VerticalSpace space="small" />
         <Text>Component Type</Text>
         <VerticalSpace space="small" />
-        <TextboxAutocomplete variant="border" onInput={handleInput} value={componentType} options={options} />
+
+        <Columns space="extraSmall">
+          <TextboxAutocomplete variant="border" onInput={handleInput} value={componentType} options={options} />
+          <IconButton onClick={clearComponentData} title="Reset Component"><IconSwap32/></IconButton>
+        </Columns>
+        
         <VerticalSpace space="medium" />
         {componentForm != null ? componentForm: null}
       </Container>
@@ -476,42 +533,35 @@ function Plugin(data: { metadataJson: string} ) {
   if (metadata != null)
   {
     var titleField = drawTitleField();
-    if (titleField != null)
-    {
+    if (titleField != null) {
       layout.push(titleField);
     }
 
     var bindingKeyField = drawBindingKeyField();
-    if (bindingKeyField != null)
-    {
+    if (bindingKeyField != null) {
       layout.push(bindingKeyField);
     }
     
     var localizationKeyField = drawLocalizationKeyField();
-    if (localizationKeyField != null)
-    {
+    if (localizationKeyField != null) {
       layout.push(localizationKeyField);
     }
 
     var componenTypeField = drawComponentTypeField();
-    if (componenTypeField != null)
-    {
+    if (componenTypeField != null) {
       layout.push(componenTypeField);
     }
 
     var tagsField = drawTagsField();
-    if (tagsField != null)
-    {
+    if (tagsField != null) {
       layout.push(tagsField);
     }
 
-    layout.push(
-      <Container space='small'>
-        <VerticalSpace space="small" />
-        <Button fullWidth onClick={clearComponentData}>Revert to Default</Button>
-        <VerticalSpace space="small" />
-      </Container>
-    );
+    var warningsField = drawWarningsField();
+    if (warningsField != null) {
+      layout.push(warningsField);
+    }
+
   } else {
     layout.push(
       <Container space='small'>
@@ -520,22 +570,6 @@ function Plugin(data: { metadataJson: string} ) {
       <VerticalSpace space="small" />
     </Container>
     );
-  }
-
-  function clearComponentData(event: JSX.TargetedMouseEvent<HTMLButtonElement>) {
-    if (metadata)
-    {
-      metadata.componentData = null;
-      emitNodeUpdated(true);
-    }
-  }
-
-  function setTags(event: JSX.TargetedEvent<HTMLInputElement>) {
-    if (metadata)
-    {
-      metadata.tags = event.currentTarget.value;
-      emitNodeUpdated(false);
-    }
   }
 
   /*function onWindowResize(windowSize: { width: number; height: number }) {

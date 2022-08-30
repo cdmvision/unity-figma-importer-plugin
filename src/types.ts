@@ -1,6 +1,7 @@
 export const events = {
   selectedNodeUpdated: 'selectedNodeUpdated',
   refreshUI: 'refreshUI',
+  selectNode: 'selectNode',
   close: 'close'
 };
 
@@ -12,6 +13,18 @@ export const pluginData = {
   tags: 'tags',
 };
 
+export class Warning {
+  public message: string;
+  public nodeId: string;
+  public nodeName: string;
+
+  constructor(message: string, nodeId: string, nodeName: string) {
+    this.message = message;
+    this.nodeId = nodeId;
+    this.nodeName = nodeName;
+  }
+}
+
 export class NodeMetadata {
   public id: string;
   public type: string;
@@ -22,6 +35,8 @@ export class NodeMetadata {
   public componentData: object | null;
   public tags: string;
 
+  public warnings: Warning[];
+
   constructor() {
     this.id = '';
     this.type = '';
@@ -31,6 +46,7 @@ export class NodeMetadata {
     this.componentType = '';
     this.componentData = null;
     this.tags = '';
+    this.warnings = [];
   }
 }
 
