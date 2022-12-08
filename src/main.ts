@@ -2,6 +2,8 @@ import { on, once, emit, showUI } from '@create-figma-plugin/utilities'
 
 import { deserializeMetadata, events, NodeMetadata, pluginData, serializeMetadata, Warning} from './types'
 
+type NodeWithTransform = GroupNode | FrameNode | ComponentNode | InstanceNode | BooleanOperationNode | VectorNode | LineNode | RectangleNode
+
 export default function () {
   figma.on('selectionchange', function () {
     refreshUI();
@@ -9,6 +11,10 @@ export default function () {
 
   figma.on('currentpagechange', function () {
     refreshUI();
+  });
+
+  figma.once('close', function () {
+    removeWarningNodes();
   });
 
   on(events.selectedNodeUpdated, function (metadataStr: string, repaint: boolean) {
@@ -22,7 +28,6 @@ export default function () {
     }
   });
 
-  
   on(events.selectNode, function (nodeId: string) {
     const targetNode = figma.currentPage.findOne(node => node.id === nodeId);
     if (targetNode != null) {
@@ -36,10 +41,6 @@ export default function () {
     refreshUI();
   });
 
-  once(events.close, function () {
-    figma.closePlugin();
-  })
-
   /*on('RESIZE_WINDOW', function (windowSize: { width: number; height: number }) {
     const { width, height } = windowSize
     figma.ui.resize(width, height)
@@ -51,12 +52,15 @@ export default function () {
 function refreshUI()
 {
   const node = getSelectedNode();
+
   var metadataJson:string = "";
 
-  if (node != null)
+  if (node != null && !isWarningNode(node))
   {
+    removeWarningNodes();
     const metadata = createMetadataFromNode(node);
     checkWarningsForNode(node, metadata);
+    drawWarningNodes(metadata.warnings);
 
     metadataJson = serializeMetadata(metadata);
   }
@@ -88,7 +92,85 @@ function supportsChildren(node: SceneNode | PageNode):
 
 type NodeWithChildren = GroupNode | FrameNode | ComponentNode | InstanceNode | BooleanOperationNode | PageNode
 
+
+const warningNodeName = '<<<WARNINGS>>>';
+
+function isWarningNode(node: SceneNode | PageNode):boolean {
+  if (node.type === 'FRAME' && node.name === warningNodeName) {
+    return true;
+  }
+
+  var nodeChildren = node as NodeWithChildren;
+  if (nodeChildren != null && nodeChildren.parent != null) {
+    return nodeChildren.parent.type === 'FRAME' && nodeChildren.parent.name === warningNodeName
+  }
+
+  return false;
+}
+
+function removeWarningNodes() {
+  var root = figma.currentPage.findOne(node => isWarningNode(node)) as FrameNode;
+  if (root != null) {
+    root.remove();
+  }
+}
+
+function drawWarningNodes(warnings: Warning[]) {
+  var root = figma.createFrame();
+  root.name = warningNodeName;
+  root.clipsContent = false;
+  root.fills = [];
+  root.strokes = [];
+  root.locked = true;
+  root.expanded = false;
+
+  const rootMetadata = createMetadataFromNode(root);
+  rootMetadata.ignore = true;
+  updateNodeByMetadata(root, rootMetadata);
+  
+  figma.currentPage.appendChild(root);
+
+  warnings.forEach(warning => {
+    var rect = figma.createFrame();
+    root.appendChild(rect);
+
+    rect.name = warning.node.name;
+    
+    var width:number = 0;
+    var height:number = 0;
+
+    var layout = warning.node as LayoutMixin;
+    if (layout != null) {
+      rect.x = layout.absoluteRenderBounds?.x ?? warning.node.x;
+      rect.y = layout.absoluteRenderBounds?.y ?? warning.node.y;
+
+      width = layout.absoluteRenderBounds?.width ?? warning.node.width;
+      height = layout.absoluteRenderBounds?.height ?? warning.node.height;
+
+    } else {
+      rect.x = warning.node.x;
+      rect.y = warning.node.y;
+      width = warning.node.width;
+      height =  warning.node.height;
+    }
+
+    width = Math.max(1, width);
+    height = Math.max(1, height);
+    rect.resize(width, height);
+    
+    rect.clipsContent = false;
+    rect.fills = [];
+    rect.strokes = [{type: 'SOLID', color: {r: 1, g: 0, b: 1}}];
+    rect.strokeAlign = 'OUTSIDE';
+    rect.strokeWeight = 2;
+  });
+}
+
 function checkWarningsForNode(node:SceneNode | PageNode, metadata: NodeMetadata) {
+  if (isWarningNode(node)) {
+    return;
+  }
+  
   if (node.type !== 'PAGE') {
     checkWarningsAll(node, metadata);
   } else {
@@ -100,8 +182,12 @@ function checkWarningsForNode(node:SceneNode | PageNode, metadata: NodeMetadata)
 }
 
 function checkWarningsForNodeRecurse(node:SceneNode, metadata: NodeMetadata) {
+  if (isWarningNode(node)) {
+    return;
+  }
+
   checkWarningsAll(node, metadata);
-  
+
   if (supportsChildren(node))
   {
     var children = (node as NodeWithChildren).children;
@@ -122,15 +208,17 @@ function checkWarningsAll(node:SceneNode, metadata: NodeMetadata) {
 function checkWarningIfMissingComponentReference(node:SceneNode, metadata: NodeMetadata) {
   if (node.type === 'INSTANCE') {
     var instanceNode = node as InstanceNode;
-    if (instanceNode.mainComponent != null) {
-      metadata.warnings.push(new Warning("Missing component.", node.id, node.name));
+
+    var mainComponent = instanceNode.mainComponent;
+    if (mainComponent == null || mainComponent.removed || (!mainComponent.remote && mainComponent.parent == null)) {      
+      metadata.warnings.push(new Warning("Missing component.", node));
     }
   }
 }
 
 function checkWarningIfLine(node:SceneNode, metadata: NodeMetadata) {
   if (node.type === 'LINE') {
-    metadata.warnings.push(new Warning("Line does not supported; use 'Outline stroke'.", node.id, node.name));
+    metadata.warnings.push(new Warning("Line does not supported; use 'Outline stroke'.", node));
   }
 }
 
@@ -139,16 +227,16 @@ function checkWarningIfMask(node:SceneNode, metadata: NodeMetadata) {
 
   const n = node as NodeWithMask;
   if (n != null && n.isMask) {
-    metadata.warnings.push(new Warning("Mask does not supported.", node.id, node.name));
+    metadata.warnings.push(new Warning("Mask does not supported.", node));
   }
 }
 
 function checkWarningIfHasRotation(node:SceneNode, metadata: NodeMetadata) {
-  type NodeWithTransform = GroupNode | FrameNode | ComponentNode | InstanceNode | BooleanOperationNode | VectorNode | LineNode | RectangleNode
+  
 
   const n = node as NodeWithTransform;
   if (n != null && n.rotation > 0.001 || n.rotation < -0.001) {
-    metadata.warnings.push(new Warning("Rotation does not supported.", node.id, node.name));
+    metadata.warnings.push(new Warning("Rotation does not supported.", node));
   }
 }
 
@@ -157,6 +245,7 @@ function createMetadataFromNode(node:BaseNode): NodeMetadata {
     metadata.id = node.id;
     metadata.type = node.type;
     metadata.name = node.name;
+    metadata.ignore = node.getPluginData(pluginData.ignore).toLowerCase() === 'true';
     metadata.bindingKey = node.getPluginData(pluginData.bindingKey);
     metadata.localizationKey = node.getPluginData(pluginData.localizationKey);
     metadata.componentType = node.getPluginData(pluginData.componentType);
@@ -186,6 +275,7 @@ function updateNodeByMetadata(node: BaseNode, metadata: NodeMetadata | null)
 {
   if (metadata != null)
   {
+    node.setPluginData(pluginData.ignore, metadata.ignore ? 'true' : 'false');
     node.setPluginData(pluginData.bindingKey, metadata.bindingKey ? metadata.bindingKey : '');
     node.setPluginData(pluginData.localizationKey, metadata.localizationKey ? metadata.localizationKey : '');
     node.setPluginData(pluginData.tags, metadata.tags ? metadata.tags : '');
