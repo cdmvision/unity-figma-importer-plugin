@@ -330,7 +330,7 @@ function drawIgnoredField(): h.JSX.Element | null {
     {
       metadata.ignored = event.currentTarget.checked;
       setIgnored(metadata.ignored);
-      emitNodeUpdated(false);
+      emitNodeUpdated(true);
     }
   }
 

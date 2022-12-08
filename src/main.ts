@@ -123,6 +123,7 @@ function drawWarningNodes(warnings: Warning[]) {
   root.strokes = [];
   root.locked = true;
   root.expanded = false;
+  root.resize(1, 1);
 
   const rootMetadata = createMetadataFromNode(root);
   rootMetadata.ignored = true;
@@ -170,6 +171,11 @@ function checkWarningsForNode(node:SceneNode | PageNode, metadata: NodeMetadata)
   if (isWarningNode(node)) {
     return;
   }
+
+  var currentMetadata = createMetadataFromNode(node);
+  if (currentMetadata.ignored) {
+    return;
+  }
   
   if (node.type !== 'PAGE') {
     checkWarningsAll(node, metadata);
@@ -186,6 +192,11 @@ function checkWarningsForNodeRecurse(node:SceneNode, metadata: NodeMetadata) {
     return;
   }
 
+  var currentMetadata = createMetadataFromNode(node);
+  if (currentMetadata.ignored) {
+    return;
+  }
+
   checkWarningsAll(node, metadata);
 
   if (supportsChildren(node))
@@ -199,13 +210,10 @@ function checkWarningsForNodeRecurse(node:SceneNode, metadata: NodeMetadata) {
 }
 
 function checkWarningsAll(node:SceneNode, metadata: NodeMetadata) {
-  var currentMetadata = createMetadataFromNode(node);
-  if (!currentMetadata.ignored) {
     checkWarningIfMissingComponentReference(node, metadata);
     checkWarningIfHasRotation(node, metadata);
     checkWarningIfMask(node, metadata);
     checkWarningIfLine(node, metadata);
-  }
 }
 
 function checkWarningIfMissingComponentReference(node:SceneNode, metadata: NodeMetadata) {
