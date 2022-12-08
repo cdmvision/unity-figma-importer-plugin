@@ -5,12 +5,12 @@ export const events = {
 };
 
 export const pluginData = {
+  ignored: 'ignored',
   bindingKey: 'bindingKey', 
   localizationKey: 'localizationKey',
   componentType: 'componentType',
   componentData: 'componentData',
-  tags: 'tags',
-  ignore: 'ignore'
+  tags: 'tags'
 };
 
 export class Warning {
@@ -31,7 +31,7 @@ export class NodeMetadata {
   public id: string;
   public type: string;
   public name: string;
-  public ignore:boolean;
+  public ignored:boolean;
   public bindingKey: string;
   public localizationKey: string;
   public componentType: string;
@@ -44,7 +44,7 @@ export class NodeMetadata {
     this.id = '';
     this.type = '';
     this.name = '';
-    this.ignore = false;
+    this.ignored = false;
     this.bindingKey = '';
     this.localizationKey = '';
     this.componentType = '';
