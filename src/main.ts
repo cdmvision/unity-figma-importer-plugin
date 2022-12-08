@@ -199,10 +199,13 @@ function checkWarningsForNodeRecurse(node:SceneNode, metadata: NodeMetadata) {
 }
 
 function checkWarningsAll(node:SceneNode, metadata: NodeMetadata) {
-  checkWarningIfMissingComponentReference(node, metadata);
-  checkWarningIfHasRotation(node, metadata);
-  checkWarningIfMask(node, metadata);
-  checkWarningIfLine(node, metadata);
+  var currentMetadata = createMetadataFromNode(node);
+  if (!currentMetadata.ignored) {
+    checkWarningIfMissingComponentReference(node, metadata);
+    checkWarningIfHasRotation(node, metadata);
+    checkWarningIfMask(node, metadata);
+    checkWarningIfLine(node, metadata);
+  }
 }
 
 function checkWarningIfMissingComponentReference(node:SceneNode, metadata: NodeMetadata) {
@@ -232,8 +235,6 @@ function checkWarningIfMask(node:SceneNode, metadata: NodeMetadata) {
 }
 
 function checkWarningIfHasRotation(node:SceneNode, metadata: NodeMetadata) {
-  
-
   const n = node as NodeWithTransform;
   if (n != null && n.rotation > 0.001 || n.rotation < -0.001) {
     metadata.warnings.push(new Warning("Rotation does not supported.", node));

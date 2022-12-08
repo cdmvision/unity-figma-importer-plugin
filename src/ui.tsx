@@ -12,6 +12,7 @@ import {
   DropdownOption,
   Dropdown,
   Button,
+  Toggle,
   Inline,
   IconButton,
   IconTarget32,
@@ -321,6 +322,29 @@ function drawTitleField(): h.JSX.Element | null {
   return null;
 }
 
+function drawIgnoredField(): h.JSX.Element | null {
+  const [ignored, setIgnored] = useState<boolean>(metadata != null ? metadata.ignored : false);
+
+  function handleChange(event: JSX.TargetedEvent<HTMLInputElement>) {
+    if (metadata != null)
+    {
+      metadata.ignored = event.currentTarget.checked;
+      setIgnored(metadata.ignored);
+      emitNodeUpdated(false);
+    }
+  }
+
+  return (
+    <Container space='small'>
+      <VerticalSpace space="small" />
+      <Toggle onChange={handleChange} value={ignored}>
+        <Text>Ignored</Text>
+      </Toggle>
+      <VerticalSpace space="small" />
+    </Container>
+  )
+}
+
 function drawBindingKeyField(): h.JSX.Element | null {
   const [bindingKey, setBindingKey] = useState<string>(metadata != null ? metadata.bindingKey : '');
   
@@ -555,6 +579,11 @@ function Plugin(data: { metadataJson: string} ) {
     var tagsField = drawTagsField();
     if (tagsField != null) {
       layout.push(tagsField);
+    }
+
+    var ignoredField = drawIgnoredField();
+    if (ignoredField != null) {
+      layout.push(ignoredField);
     }
 
     var warningsField = drawWarningsField();
