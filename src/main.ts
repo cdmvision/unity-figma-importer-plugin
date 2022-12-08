@@ -123,6 +123,10 @@ function drawWarningNodes(warnings: Warning[]) {
   root.strokes = [];
   root.locked = true;
   root.expanded = false;
+
+  const rootMetadata = createMetadataFromNode(root);
+  rootMetadata.ignore = true;
+  updateNodeByMetadata(root, rootMetadata);
   
   figma.currentPage.appendChild(root);
 
@@ -241,6 +245,7 @@ function createMetadataFromNode(node:BaseNode): NodeMetadata {
     metadata.id = node.id;
     metadata.type = node.type;
     metadata.name = node.name;
+    metadata.ignore = node.getPluginData(pluginData.ignore).toLowerCase() === 'true';
     metadata.bindingKey = node.getPluginData(pluginData.bindingKey);
     metadata.localizationKey = node.getPluginData(pluginData.localizationKey);
     metadata.componentType = node.getPluginData(pluginData.componentType);
@@ -270,6 +275,7 @@ function updateNodeByMetadata(node: BaseNode, metadata: NodeMetadata | null)
 {
   if (metadata != null)
   {
+    node.setPluginData(pluginData.ignore, metadata.ignore ? 'true' : 'false');
     node.setPluginData(pluginData.bindingKey, metadata.bindingKey ? metadata.bindingKey : '');
     node.setPluginData(pluginData.localizationKey, metadata.localizationKey ? metadata.localizationKey : '');
     node.setPluginData(pluginData.tags, metadata.tags ? metadata.tags : '');
