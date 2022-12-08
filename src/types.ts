@@ -1,8 +1,7 @@
 export const events = {
   selectedNodeUpdated: 'selectedNodeUpdated',
   refreshUI: 'refreshUI',
-  selectNode: 'selectNode',
-  close: 'close'
+  selectNode: 'selectNode'
 };
 
 export const pluginData = {
@@ -15,13 +14,15 @@ export const pluginData = {
 
 export class Warning {
   public message: string;
+  public node: SceneNode;
   public nodeId: string;
   public nodeName: string;
 
-  constructor(message: string, nodeId: string, nodeName: string) {
+  constructor(message: string, node: SceneNode) {
     this.message = message;
-    this.nodeId = nodeId;
-    this.nodeName = nodeName;
+    this.node = node;
+    this.nodeId = node.id;
+    this.nodeName = node.name;
   }
 }
 
