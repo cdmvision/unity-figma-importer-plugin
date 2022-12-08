@@ -113,9 +113,19 @@ function checkWarningsForNodeRecurse(node:SceneNode, metadata: NodeMetadata) {
 }
 
 function checkWarningsAll(node:SceneNode, metadata: NodeMetadata) {
+  checkWarningIfMissingComponentReference(node, metadata);
   checkWarningIfHasRotation(node, metadata);
   checkWarningIfMask(node, metadata);
   checkWarningIfLine(node, metadata);
+}
+
+function checkWarningIfMissingComponentReference(node:SceneNode, metadata: NodeMetadata) {
+  if (node.type === 'INSTANCE') {
+    var instanceNode = node as InstanceNode;
+    if (instanceNode.mainComponent != null) {
+      metadata.warnings.push(new Warning("Missing component.", node.id, node.name));
+    }
+  }
 }
 
 function checkWarningIfLine(node:SceneNode, metadata: NodeMetadata) {
