@@ -508,7 +508,9 @@ function drawComponentTypeField() : h.JSX.Element | null {
     {
       metadata.componentType = event.currentTarget.value;
       setComponentType(metadata.componentType);
-      emitNodeUpdated(true);
+
+      const isRepaintNeeded = components.findIndex(x => x.getType() == metadata?.componentType) >= 0;
+      emitNodeUpdated(isRepaintNeeded); 
     }
   }
 
