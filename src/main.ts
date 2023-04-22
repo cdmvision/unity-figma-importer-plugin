@@ -37,6 +37,22 @@ export default function () {
     }
   });
 
+  on(events.showWarnings, function () {
+    console.log('showWarnings');
+    const node = getSelectedNode();
+    const metadata = createMetadataFromNode(node);
+    
+    checkWarningsForNode(node, metadata);
+
+    removeWarningNodes();
+    drawWarningNodes(metadata.warnings);
+  });
+
+  on(events.hideWarnings, function () {
+    console.log('hideWarnings');
+    removeWarningNodes();
+  });
+
   on(events.refreshUI, function () {
     refreshUI();
   });
@@ -60,7 +76,6 @@ function refreshUI()
     removeWarningNodes();
     const metadata = createMetadataFromNode(node);
     checkWarningsForNode(node, metadata);
-    drawWarningNodes(metadata.warnings);
 
     metadataJson = serializeMetadata(metadata);
   }

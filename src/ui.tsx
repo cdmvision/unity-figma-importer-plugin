@@ -424,7 +424,13 @@ function drawWarningsField(): h.JSX.Element | null {
   const [expand, setExpand] = useState<boolean>(false);
 
   function handleClick(event: JSX.TargetedMouseEvent<HTMLInputElement>) {
-    setExpand(!(expand === true))
+    if (!(expand === true)) {
+      setExpand(true);
+      emit(events.showWarnings);
+    } else {
+      setExpand(false);
+      emit(events.hideWarnings);
+    }
   }
 
   function goToNode(nodeId: string) {

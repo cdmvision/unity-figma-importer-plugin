@@ -1,7 +1,9 @@
 export const events = {
   selectedNodeUpdated: 'selectedNodeUpdated',
   refreshUI: 'refreshUI',
-  selectNode: 'selectNode'
+  selectNode: 'selectNode',
+  showWarnings : 'showWarnings',
+  hideWarnings : 'hideWarnings'
 };
 
 export const pluginData = {
