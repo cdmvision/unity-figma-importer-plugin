@@ -21,6 +21,7 @@ export default function () {
     const node = getSelectedNode();
     const metadata = deserializeMetadata(metadataStr);
     updateNodeByMetadata(node, metadata);
+    updateBindingKeyForVariants(node);
 
     if (repaint)
     {
@@ -105,7 +106,7 @@ function supportsChildren(node: SceneNode | PageNode):
          node.type === 'BOOLEAN_OPERATION' || node.type === 'PAGE';
 }
 
-type NodeWithChildren = GroupNode | FrameNode | ComponentNode | InstanceNode | BooleanOperationNode | PageNode
+type NodeWithChildren = GroupNode | FrameNode | ComponentNode | InstanceNode | BooleanOperationNode | PageNode | ComponentSetNode
 
 
 const warningNodeName = '<<<WARNINGS>>>';
@@ -275,8 +276,7 @@ function createMetadataFromNode(node:BaseNode): NodeMetadata {
     metadata.componentType = node.getPluginData(pluginData.componentType);
     metadata.tags = node.getPluginData(pluginData.tags);
 
-    if (node.type == 'INSTANCE' && node.mainComponent != null)
-    {
+    if (node.type == 'INSTANCE' && node.mainComponent != null) {
       if (node.mainComponent.parent != null && node.mainComponent.parent.type == 'COMPONENT_SET')
       {
         metadata.componentType = node.mainComponent.parent.getPluginData(pluginData.componentType);
@@ -295,10 +295,8 @@ function createMetadataFromNode(node:BaseNode): NodeMetadata {
     return metadata;
 }
 
-function updateNodeByMetadata(node: BaseNode, metadata: NodeMetadata | null)
-{
-  if (metadata != null)
-  {
+function updateNodeByMetadata(node: BaseNode, metadata: NodeMetadata | null) {
+  if (metadata != null) {
     node.setPluginData(pluginData.ignored, metadata.ignored ? 'true' : 'false');
     node.setPluginData(pluginData.bindingKey, metadata.bindingKey ? metadata.bindingKey : '');
     node.setPluginData(pluginData.localizationKey, metadata.localizationKey ? metadata.localizationKey : '');
@@ -313,4 +311,87 @@ function updateNodeByMetadata(node: BaseNode, metadata: NodeMetadata | null)
 
     console.log('Selected node updated: ' + serializeMetadata(metadata));
   }
+}
+
+function updateBindingKeyForVariants(node: BaseNode) {
+
+  updateDataForVariants(node, variant => {
+    var bindingKey = node.getPluginData(pluginData.bindingKey);
+    bindingKey = bindingKey ? bindingKey : '';
+    variant.setPluginData(pluginData.bindingKey, bindingKey);
+
+    console.log("Component set node binding key updated for: (" + variant.id + "," + variant.name + ")");
+  })
+}
+
+function updateLocalizationKeyForVariants(node: BaseNode) {
+  if (node.type !== 'TEXT')
+    return;
+
+  updateDataForVariants(node, variant => {
+    var localizationKey = node.getPluginData(pluginData.localizationKey);
+    localizationKey = localizationKey ? localizationKey : '';
+    variant.setPluginData(pluginData.localizationKey, localizationKey);
+
+    console.log("Component set node binding key updated for: (" + variant.id + "," + variant.name + ")");
+  })
+}
+
+function updateDataForVariants(node: BaseNode, updateNode: (v:SceneNode) => void) {
+  const path:number[] = [];
+  const componentSet = findAttachedComponentSet(node, path);
+   
+  if (componentSet != null) {
+    //console.log("Component set: " + componentSet?.name + " path: " + path);
+    const variants = componentSet.children;
+
+    
+    for (let j = 0; j < variants.length; j++) {
+      let target:NodeWithChildren = variants[j] as NodeWithChildren;
+
+      for (let i = 2; i < path.length; i++) {
+        if (i == path.length - 1) {
+          const variant = target.children[path[i]];
+          if (variant && variant.type === node.type) {
+            updateNode(variant);
+          }
+        } else {
+          target = target.children[path[i]] as NodeWithChildren;
+        }
+      }
+    }
+  }
+}
+
+function findAttachedComponentSet(node: BaseNode, path:number[]) : ComponentSetNode | null {
+  path.push(getSiblingIndex(node));
+
+  for (let current = node.parent; current != null; current = current.parent) {
+
+    path.push(getSiblingIndex(current));
+
+    if (current.type === 'COMPONENT_SET') {
+      path = path.reverse();
+      return current;
+    }
+  }
+
+  path = [];
+  return null;
+}
+
+function getSiblingIndex(node: BaseNode) : number {
+  if (node.parent == null) 
+    return -1;
+
+    var parent = node.parent as NodeWithChildren;
+    if (parent != null) {
+      for (let i = 0; i < parent.children.length; i++) {
+        if (parent.children[i] == node) {
+          return i;
+        }
+      }
+    }
+  
+  return -1;
 }
