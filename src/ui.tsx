@@ -43,6 +43,45 @@ enum SliderDirection {
   TopToBottom = 'TopToBottom'
 }
 
+enum ProgressDirection {
+  Horizontal = 'Horizontal',
+  Vertical   = 'Vertical',
+  Radial90   = 'Radial90',
+  Radial180  = 'Radial180',
+  Radial360  = 'Radial360'
+}
+
+enum ProgressBarOriginHorizontal {
+  Left  = 'Left',
+  Right = 'Right'
+}
+
+enum ProgressBarOriginVertical {
+  Bottom = 'Bottom',
+  Top    = 'Top'
+}
+
+enum ProgressBarOriginRadial90 {
+  BottomLeft    = 'BottomLeft',
+  TopLeft       = 'TopLeft',
+  TopRight      = 'TopRight',
+  BottomRight   = 'BottomRight'
+}
+
+enum ProgressBarOriginRadial180 {
+  Bottom  = 'Bottom',
+  Top     = 'Top',
+  Left    = 'Left',
+  Right   = 'Right'
+}
+
+enum ProgressBarOriginRadial360 {
+  Bottom  = 'Bottom',
+  Top     = 'Top',
+  Left    = 'Left',
+  Right   = 'Right'
+}
+
 export abstract class ComponentData {
 
   public updateData()
@@ -87,6 +126,175 @@ class ToggleData extends ComponentData {
 
   getForm(): h.JSX.Element | null {
     return null;
+  }
+}
+
+class ProgressBarData extends ComponentData {
+  public direction: ProgressDirection = ProgressDirection.Horizontal;
+  public originHorizontal: ProgressBarOriginHorizontal = ProgressBarOriginHorizontal.Left;
+  public originVertical: ProgressBarOriginVertical = ProgressBarOriginVertical.Bottom;
+  public originRadial90: ProgressBarOriginRadial90 = ProgressBarOriginRadial90.BottomLeft;
+  public originRadial180: ProgressBarOriginRadial180 = ProgressBarOriginRadial180.Bottom;
+  public originRadial360: ProgressBarOriginRadial360 = ProgressBarOriginRadial360.Bottom;
+  public clockwise: boolean = false;
+
+  getType(): string {
+    return 'ProgressBar';
+  }
+
+  getForm(): h.JSX.Element | null {
+    const options: Array<DropdownOption> = Object.values(ProgressDirection).map(v => ({ value: v }));
+    const [direction, setDirection] = useState<ProgressDirection>(this.direction);
+
+    const originHorizontalOptions: Array<DropdownOption> = Object.values(ProgressBarOriginHorizontal).map(v => ({ value : v}));
+    const [originHorizontal, setHorizontalOrigin] = useState<ProgressBarOriginHorizontal>(this.originHorizontal);
+
+    const originVerticalOptions: Array<DropdownOption> = Object.values(ProgressBarOriginVertical).map(v => ({ value : v}));
+    const [originVertical, setVerticalOrigin] = useState<ProgressBarOriginVertical>(this.originVertical);
+
+    const originRadial90Options: Array<DropdownOption> = Object.values(ProgressBarOriginRadial90).map(v => ({ value : v}));
+    const [originRadial90, setRadial90Origin] = useState<ProgressBarOriginRadial90>(this.originRadial90);
+
+    const originRadial180Options: Array<DropdownOption> = Object.values(ProgressBarOriginRadial180).map(v => ({ value : v}));
+    const [originRadial180, setRadial180Origin] = useState<ProgressBarOriginRadial180>(this.originRadial180);
+
+    const originRadial360Options: Array<DropdownOption> = Object.values(ProgressBarOriginRadial360).map(v => ({ value : v}));
+    const [originRadial360, setRadial360Origin] = useState<ProgressBarOriginRadial360>(this.originRadial360);
+
+    const [clockwise, setClockwise] = useState<boolean>(this.clockwise);
+
+    function getProgressBar() {
+      return metadata?.componentData as ProgressBarData;
+    }
+
+    function handleDirectionInput(event: JSX.TargetedEvent<HTMLInputElement>) {
+      const value = event.currentTarget.value as ProgressDirection;
+      setDirection(value);
+      getProgressBar().direction = value;
+      emitNodeUpdated(true);
+    }
+
+    function handleClockwise(event: JSX.TargetedEvent<HTMLInputElement>) {
+      const checked = event.currentTarget.checked;
+      setClockwise(checked);
+      getProgressBar().clockwise = checked;
+      emitNodeUpdated(false);
+    }
+
+    function handleOriginHorizontalInput(event: JSX.TargetedEvent<HTMLInputElement>) {
+      const value = event.currentTarget.value as ProgressBarOriginHorizontal;
+      setHorizontalOrigin(value);
+      getProgressBar().originHorizontal = value;
+      emitNodeUpdated(false);
+    }
+
+    function handleOriginVerticalInput(event: JSX.TargetedEvent<HTMLInputElement>) {
+      const value = event.currentTarget.value as ProgressBarOriginVertical;
+      setVerticalOrigin(value);
+      getProgressBar().originVertical = value;
+      emitNodeUpdated(false);
+    }
+
+    function handleOriginRadial90Input(event: JSX.TargetedEvent<HTMLInputElement>) {
+      const value = event.currentTarget.value as ProgressBarOriginRadial90;
+      setRadial90Origin(value);
+      getProgressBar().originRadial90 = value;
+      emitNodeUpdated(false);
+    }
+
+    function handleOriginRadial180Input(event: JSX.TargetedEvent<HTMLInputElement>) {
+      const value = event.currentTarget.value as ProgressBarOriginRadial180;
+      setRadial180Origin(value);
+      getProgressBar().originRadial180 = value;
+      emitNodeUpdated(false);
+    }
+
+    function handleOriginRadial360Input(event: JSX.TargetedEvent<HTMLInputElement>) {
+      const value = event.currentTarget.value as ProgressBarOriginRadial360;
+      setRadial360Origin(value);
+      getProgressBar().originRadial360 = value;
+      emitNodeUpdated(false);
+    }
+
+    const layout: Array<JSX.Element> = [];
+
+    layout.push(
+      <Container space='extraSmall'>
+        <VerticalSpace space='small' />
+        <Text>Direction</Text>
+        <VerticalSpace space="small" />
+        <Dropdown onChange={handleDirectionInput} options={options} value={direction} />
+        <VerticalSpace space="small" />
+      </Container>
+    );
+
+    if (direction == ProgressDirection.Horizontal) {
+      layout.push(
+        <Container space='extraSmall'>
+          <VerticalSpace space='small' />
+          <Text>Origin</Text>
+          <VerticalSpace space="small" />
+          <Dropdown onChange={handleOriginHorizontalInput} options={originHorizontalOptions} value={originHorizontal} />
+          <VerticalSpace space="small" />
+        </Container>
+      );
+    } else if (direction == ProgressDirection.Vertical) {
+      layout.push(
+        <Container space='extraSmall'>
+          <VerticalSpace space='small' />
+          <Text>Origin</Text>
+          <VerticalSpace space="small" />
+          <Dropdown onChange={handleOriginVerticalInput} options={originVerticalOptions} value={originVertical} />
+          <VerticalSpace space="small" />
+        </Container>
+      );
+    } else if (direction == ProgressDirection.Radial90) {
+      layout.push(
+        <Container space='extraSmall'>
+          <VerticalSpace space='small' />
+          <Text>Origin</Text>
+          <VerticalSpace space="small" />
+          <Dropdown onChange={handleOriginRadial90Input} options={originRadial90Options} value={originRadial90} />
+          <VerticalSpace space="small" />
+        </Container>
+      );
+    } else if (direction == ProgressDirection.Radial180) {
+      layout.push(
+        <Container space='extraSmall'>
+          <VerticalSpace space='small' />
+          <Text>Origin</Text>
+          <VerticalSpace space="small" />
+          <Dropdown onChange={handleOriginRadial180Input} options={originRadial180Options} value={originRadial180} />
+          <VerticalSpace space="small" />
+        </Container>
+      );
+    } else if (direction == ProgressDirection.Radial360) {
+      layout.push(
+        <Container space='extraSmall'>
+          <VerticalSpace space='small' />
+          <Text>Origin</Text>
+          <VerticalSpace space="small" />
+          <Dropdown onChange={handleOriginRadial360Input} options={originRadial360Options} value={originRadial360} />
+          <VerticalSpace space="small" />
+        </Container>
+      );
+    }
+
+    if (direction == ProgressDirection.Radial90 ||
+        direction == ProgressDirection.Radial180 ||
+        direction == ProgressDirection.Radial360) {
+      layout.push(
+        <Container space='extraSmall'>
+          <VerticalSpace space="small" />
+          <Toggle onChange={handleClockwise} value={clockwise}>
+            <Text>Clockwise</Text>
+          </Toggle>
+          <VerticalSpace space="small" />
+        </Container>
+      );
+    }
+
+    return (<Container space='extraSmall'>{layout}</Container>);
   }
 }
 
@@ -478,6 +686,7 @@ function drawComponentTypeField() : h.JSX.Element | null {
     new InputFieldData(),
     new DropdownData(),
     new SliderData(),
+    new ProgressBarData(),
     new ScrollViewData(),
     new ScrollbarData(),
   ];
