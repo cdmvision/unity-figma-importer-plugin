@@ -20,7 +20,8 @@ import {
   IconInfo32,
   Banner,
   Disclosure,
-  IconWarning32
+  IconWarning32,
+  Divider
 } from '@create-figma-plugin/ui'
 
 import { emit } from '@create-figma-plugin/utilities'
@@ -450,12 +451,12 @@ class InputFieldData extends ComponentData {
     const [caretColorOpacity, setCaretColorOpacity] = useState<string>(this.caretColorOpacity);
     const [caretWidth, setCaretWidth] = useState<number>(this.caretWidth);
 
-    const caretWidths: Array<DropdownOption<number>> = [
-      {value: 1},
-      {value: 2},
-      {value: 3},
-      {value: 4},
-      {value: 5}
+    const caretWidths: Array<DropdownOption> = [
+      {value: '1'},
+      {value: '2'},
+      {value: '3'},
+      {value: '4'},
+      {value: '5'}
     ];
 
     function getInputField() {
@@ -486,9 +487,11 @@ class InputFieldData extends ComponentData {
       emitNodeUpdated(false);
     }
 
-    function handleCaretWidthInput(value: number) {
-      setCaretWidth(value);
-      getInputField().caretWidth = value;
+    function handleCaretWidthInput(value: string) {
+      var intValue = parseInt(value);
+
+      setCaretWidth(intValue);
+      getInputField().caretWidth = intValue;
       emitNodeUpdated(false);
     }
 
@@ -509,7 +512,7 @@ class InputFieldData extends ComponentData {
         <VerticalSpace space="small" />
         <Text>Caret Width</Text>
         <VerticalSpace space="small" />
-        <Dropdown options={caretWidths} onValueChange={handleCaretWidthInput} value={caretWidth} />
+        <Dropdown options={caretWidths} onValueChange={handleCaretWidthInput} value={caretWidth.toString()} />
       </Container>
     )
   }
@@ -625,8 +628,36 @@ function drawTagsField(): h.JSX.Element | null {
       <Textbox variant="border" onChange={handleInput} value={tags}/>
       <VerticalSpace space="small" />
     </Container>
-  )
+  );
 }
+
+function drawCreateIcon(): h.JSX.Element | null {
+  function handleClick(event: JSX.TargetedMouseEvent<HTMLButtonElement>) {
+    emit(events.convertIcon);
+  }
+
+  const isNotSupported: boolean = 
+    metadata == null || 
+    metadata.type == 'PAGE' || 
+    metadata.type == 'TEXT' || 
+    metadata.type == 'COMPONENT_SET';
+  
+  if (isNotSupported) {
+    return null;
+  }
+
+  return (
+    <Button onClick={handleClick} secondary>
+      Convert to Icon
+    </Button>
+  );
+}
+
+function drawExtraControls(): h.JSX.Element | null {
+  
+  return drawCreateIcon();
+}
+
 
 function drawWarningsField(): h.JSX.Element | null {
   const [expand, setExpand] = useState<boolean>(false);
@@ -807,7 +838,6 @@ function Plugin(data: { metadataJson: string} ) {
     if (warningsField != null) {
       layout.push(warningsField);
     }
-
   } else {
     layout.push(
       <Container space='small'>
@@ -828,6 +858,13 @@ function Plugin(data: { metadataJson: string} ) {
     maxWidth: 320,
     maxHeight: 500
   })*/
+
+  var extraControls = drawExtraControls();
+  if (extraControls != null) {
+    layout.push(<Divider />);
+    layout.push(<VerticalSpace space="extraSmall" />);
+    layout.push(extraControls);
+  }
 
   return (<Container space='extraSmall'>{layout}</Container>)
 }
