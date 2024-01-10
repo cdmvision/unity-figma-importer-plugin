@@ -22,9 +22,10 @@
     "name": "Unity Importer",
     "menu": [
       {
-        "name": "Inspector",
+        "name": "Unity Importer",
         "main": "src/main.ts",
-        "ui": "src/ui.tsx"
+        "ui": "src/ui.tsx",
+        "parameterOnly": false
       },
       "-",
       {
