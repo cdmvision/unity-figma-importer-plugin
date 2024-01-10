@@ -3,8 +3,7 @@ export const events = {
   refreshUI: 'refreshUI',
   selectNode: 'selectNode',
   showWarnings : 'showWarnings',
-  hideWarnings : 'hideWarnings',
-  convertIcon: 'convertIcon',
+  hideWarnings : 'hideWarnings'
 };
 
 export const pluginData = {

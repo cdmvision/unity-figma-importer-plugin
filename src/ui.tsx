@@ -631,33 +631,10 @@ function drawTagsField(): h.JSX.Element | null {
   );
 }
 
-function drawCreateIcon(): h.JSX.Element | null {
-  function handleClick(event: JSX.TargetedMouseEvent<HTMLButtonElement>) {
-    emit(events.convertIcon);
-  }
-
-  const isNotSupported: boolean = 
-    metadata == null || 
-    metadata.type == 'PAGE' || 
-    metadata.type == 'TEXT' || 
-    metadata.type == 'COMPONENT_SET';
-  
-  if (isNotSupported) {
-    return null;
-  }
-
-  return (
-    <Button onClick={handleClick} secondary>
-      Convert to Icon
-    </Button>
-  );
-}
-
 function drawExtraControls(): h.JSX.Element | null {
   
-  return drawCreateIcon();
+  return null;
 }
-
 
 function drawWarningsField(): h.JSX.Element | null {
   const [expand, setExpand] = useState<boolean>(false);
