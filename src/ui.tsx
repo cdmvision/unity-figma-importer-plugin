@@ -20,7 +20,8 @@ import {
   IconInfo32,
   Banner,
   Disclosure,
-  IconWarning32
+  IconWarning32,
+  Divider
 } from '@create-figma-plugin/ui'
 
 import { emit } from '@create-figma-plugin/utilities'
@@ -629,7 +630,12 @@ function drawTagsField(): h.JSX.Element | null {
       <Textbox variant="border" onChange={handleInput} value={tags}/>
       <VerticalSpace space="small" />
     </Container>
-  )
+  );
+}
+
+function drawExtraControls(): h.JSX.Element | null {
+  
+  return null;
 }
 
 function drawWarningsField(): h.JSX.Element | null {
@@ -811,7 +817,6 @@ function Plugin(data: { metadataJson: string} ) {
     if (warningsField != null) {
       layout.push(warningsField);
     }
-
   } else {
     layout.push(
       <Container space='small'>
@@ -832,6 +837,13 @@ function Plugin(data: { metadataJson: string} ) {
     maxWidth: 320,
     maxHeight: 500
   })*/
+
+  var extraControls = drawExtraControls();
+  if (extraControls != null) {
+    layout.push(<Divider />);
+    layout.push(<VerticalSpace space="extraSmall" />);
+    layout.push(extraControls);
+  }
 
   return (<Container space='extraSmall'>{layout}</Container>)
 }

@@ -20,7 +20,27 @@
     ],
     "id": "1047282855279327962",
     "name": "Unity Importer",
-    "main": "src/main.ts",
-    "ui": "src/ui.tsx"
+    "menu": [
+      {
+        "name": "Unity Importer",
+        "main": "src/main.ts",
+        "ui": "src/ui.tsx",
+        "parameterOnly": false
+      },
+      "-",
+      {
+        "name": "Convert to Icon",
+        "main": "src/convert-icon/main.ts",
+        "parameterOnly": false,
+        "parameters": [
+          {
+            "key": "size",
+            "description": "Enter an icon size",
+            "allowFreeform": true,
+            "optional": true
+          }
+        ]
+      }
+    ]
   }
 }

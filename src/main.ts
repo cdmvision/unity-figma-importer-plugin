@@ -1,10 +1,9 @@
-import { on, once, emit, showUI } from '@create-figma-plugin/utilities'
-
+import { on, showUI } from '@create-figma-plugin/utilities'
 import { deserializeMetadata, events, NodeMetadata, pluginData, serializeMetadata, Warning} from './types'
 
 type NodeWithTransform = GroupNode | FrameNode | ComponentNode | InstanceNode | BooleanOperationNode | VectorNode | LineNode | RectangleNode
 
-export default function () {
+export default async function () {
   figma.on('selectionchange', function () {
     refreshUI();
   });
@@ -39,7 +38,7 @@ export default function () {
   });
 
   on(events.showWarnings, function () {
-    console.log('showWarnings');
+    //console.log('showWarnings');
     const node = getSelectedNode();
     const metadata = createMetadataFromNode(node);
     
@@ -50,7 +49,7 @@ export default function () {
   });
 
   on(events.hideWarnings, function () {
-    console.log('hideWarnings');
+    //console.log('hideWarnings');
     removeWarningNodes();
   });
 
