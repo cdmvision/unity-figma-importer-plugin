@@ -450,12 +450,12 @@ class InputFieldData extends ComponentData {
     const [caretColorOpacity, setCaretColorOpacity] = useState<string>(this.caretColorOpacity);
     const [caretWidth, setCaretWidth] = useState<number>(this.caretWidth);
 
-    const caretWidths: Array<DropdownOption<number>> = [
-      {value: 1},
-      {value: 2},
-      {value: 3},
-      {value: 4},
-      {value: 5}
+    const caretWidths: Array<DropdownOption> = [
+      {value: "1"},
+      {value: "2"},
+      {value: "3"},
+      {value: "4"},
+      {value: "5"}
     ];
 
     function getInputField() {
@@ -486,10 +486,14 @@ class InputFieldData extends ComponentData {
       emitNodeUpdated(false);
     }
 
-    function handleCaretWidthInput(value: number) {
-      setCaretWidth(value);
-      getInputField().caretWidth = value;
-      emitNodeUpdated(false);
+    function handleCaretWidthInput(value: string) {
+      const valueInt = parseInt(value);
+      
+      if (!isNaN(valueInt)) {
+        setCaretWidth(valueInt);
+        getInputField().caretWidth = valueInt;
+        emitNodeUpdated(false);
+      }
     }
 
     return (
@@ -509,7 +513,7 @@ class InputFieldData extends ComponentData {
         <VerticalSpace space="small" />
         <Text>Caret Width</Text>
         <VerticalSpace space="small" />
-        <Dropdown options={caretWidths} onValueChange={handleCaretWidthInput} value={caretWidth} />
+        <Dropdown options={caretWidths} onValueChange={handleCaretWidthInput} value={caretWidth.toString()} />
       </Container>
     )
   }
