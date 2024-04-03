@@ -1,7 +1,6 @@
 # Unity Figma Importer Plugin
 Figma plugin for saving Unity specific data on Figma nodes.
 
-
 # How to Install
 * Go to project directory and run:
 * `npm install`

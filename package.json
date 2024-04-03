@@ -20,6 +20,7 @@
     ],
     "id": "1047282855279327962",
     "name": "Unity Importer",
+    "api": "1.88.0",
     "documentAccess": "dynamic-page",
     "networkAccess": {
       "allowedDomains": ["none"]
