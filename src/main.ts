@@ -1,51 +1,50 @@
 import { on, showUI } from '@create-figma-plugin/utilities'
-import { deserializeMetadata, events, NodeMetadata, pluginData, serializeMetadata, Warning} from './types'
+import { deserializeMetadata, events, NodeMetadata, pluginData, serializeMetadata, Warning } from './types'
 
 type NodeWithTransform = GroupNode | FrameNode | ComponentNode | InstanceNode | BooleanOperationNode | VectorNode | LineNode | RectangleNode
 
 export default async function () {
-  figma.on('selectionchange', function () {
-    refreshUI();
+  figma.on('selectionchange', async function () {
+    await refreshUIAsync();
   });
 
-  figma.on('currentpagechange', function () {
-    refreshUI();
+  figma.on('currentpagechange', async function () {
+    await refreshUIAsync();
   });
 
   figma.once('close', function () {
     removeWarningNodes();
   });
 
-  on(events.selectedNodeUpdated, function (metadataStr: string, repaint: boolean) {
+  on(events.selectedNodeUpdated, async function (metadataStr: string, repaint: boolean) {
     const node = getSelectedNode();
     const metadata = deserializeMetadata(metadataStr);
     updateNodeByMetadata(node, metadata);
     updateBindingKeyForVariants(node);
 
-    if (repaint)
-    {
-      refreshUI();
+    if (repaint) {
+      await refreshUIAsync();
     }
   });
 
   on(events.selectNode, function (nodeId: string) {
     const targetNode = figma.currentPage.findOne(node => node.id === nodeId);
     if (targetNode != null) {
-      figma.currentPage.selection = [ targetNode ];
+      figma.currentPage.selection = [targetNode];
     } else {
       console.log('Specified node could not found: ' + nodeId);
     }
   });
 
-  on(events.showWarnings, function () {
+  on(events.showWarnings, async function () {
     //console.log('showWarnings');
     const node = getSelectedNode();
-    const metadata = createMetadataFromNode(node);
-    
-    checkWarningsForNode(node, metadata);
+    const metadata = await createMetadataFromNodeAsync(node);
+
+    await checkWarningsForNodeAsync(node, metadata);
 
     removeWarningNodes();
-    drawWarningNodes(metadata.warnings);
+    await drawWarningNodesAsync(metadata.warnings);
   });
 
   on(events.hideWarnings, function () {
@@ -53,8 +52,8 @@ export default async function () {
     removeWarningNodes();
   });
 
-  on(events.refreshUI, function () {
-    refreshUI();
+  on(events.refreshUI, async function () {
+    await refreshUIAsync();
   });
 
   /*on('RESIZE_WINDOW', function (windowSize: { width: number; height: number }) {
@@ -62,47 +61,42 @@ export default async function () {
     figma.ui.resize(width, height)
   })*/
 
-  refreshUI();
+  await refreshUIAsync();
 }
 
-function refreshUI()
-{
+async function refreshUIAsync(): Promise<void> {
   const node = getSelectedNode();
 
-  var metadataJson:string = "";
+  var metadataJson: string = "";
 
-  if (node != null && !isWarningNode(node))
-  {
+  if (node != null && !isWarningNode(node)) {
     removeWarningNodes();
-    const metadata = createMetadataFromNode(node);
-    checkWarningsForNode(node, metadata);
+    const metadata = await createMetadataFromNodeAsync(node);
+    await checkWarningsForNodeAsync(node, metadata);
 
     metadataJson = serializeMetadata(metadata);
   }
 
-  console.log('Selected node: ' + metadataJson);
+  // console.log('Selected node: ' + metadataJson);
 
   const options = { width: 240, height: 440 };
-  showUI(options, {metadataJson: metadataJson});
+  showUI(options, { metadataJson: metadataJson });
 }
 
-function getSelectedNode()
-{
-  var node:BaseNode = figma.currentPage.selection[0];
-  
-  if (!node)
-  {
+function getSelectedNode() {
+  var node: BaseNode = figma.currentPage.selection[0];
+
+  if (!node) {
     node = figma.currentPage;
   }
   return node;
 }
 
 function supportsChildren(node: SceneNode | PageNode):
-  node is FrameNode | ComponentNode | InstanceNode | BooleanOperationNode
-{
+  node is FrameNode | ComponentNode | InstanceNode | BooleanOperationNode {
   return node.type === 'FRAME' || node.type === 'GROUP' ||
-         node.type === 'COMPONENT' || node.type === 'INSTANCE' ||
-         node.type === 'BOOLEAN_OPERATION' || node.type === 'PAGE';
+    node.type === 'COMPONENT' || node.type === 'INSTANCE' ||
+    node.type === 'BOOLEAN_OPERATION' || node.type === 'PAGE';
 }
 
 type NodeWithChildren = GroupNode | FrameNode | ComponentNode | InstanceNode | BooleanOperationNode | PageNode | ComponentSetNode
@@ -110,7 +104,7 @@ type NodeWithChildren = GroupNode | FrameNode | ComponentNode | InstanceNode | B
 
 const warningNodeName = '<<<WARNINGS>>>';
 
-function isWarningNode(node: SceneNode | PageNode):boolean {
+function isWarningNode(node: SceneNode | PageNode): boolean {
   if (node.type === 'FRAME' && node.name === warningNodeName) {
     return true;
   }
@@ -130,7 +124,7 @@ function removeWarningNodes() {
   }
 }
 
-function drawWarningNodes(warnings: Warning[]) {
+async function drawWarningNodesAsync(warnings: Warning[]): Promise<void> {
   var root = figma.createFrame();
   root.name = warningNodeName;
   root.clipsContent = false;
@@ -140,10 +134,10 @@ function drawWarningNodes(warnings: Warning[]) {
   root.expanded = false;
   root.resize(1, 1);
 
-  const rootMetadata = createMetadataFromNode(root);
+  const rootMetadata = await createMetadataFromNodeAsync(root);
   rootMetadata.ignored = true;
   updateNodeByMetadata(root, rootMetadata);
-  
+
   figma.currentPage.appendChild(root);
 
   warnings.forEach(warning => {
@@ -151,9 +145,9 @@ function drawWarningNodes(warnings: Warning[]) {
     root.appendChild(rect);
 
     rect.name = warning.node.name;
-    
-    var width:number = 0;
-    var height:number = 0;
+
+    var width: number = 0;
+    var height: number = 0;
 
     var layout = warning.node as LayoutMixin;
     if (layout != null) {
@@ -167,88 +161,88 @@ function drawWarningNodes(warnings: Warning[]) {
       rect.x = warning.node.x;
       rect.y = warning.node.y;
       width = warning.node.width;
-      height =  warning.node.height;
+      height = warning.node.height;
     }
 
     width = Math.max(1, width);
     height = Math.max(1, height);
     rect.resize(width, height);
-    
+
     rect.clipsContent = false;
     rect.fills = [];
-    rect.strokes = [{type: 'SOLID', color: {r: 1, g: 0, b: 1}}];
+    rect.strokes = [{ type: 'SOLID', color: { r: 1, g: 0, b: 1 } }];
     rect.strokeAlign = 'OUTSIDE';
     rect.strokeWeight = 2;
   });
 }
 
-function checkWarningsForNode(node:SceneNode | PageNode, metadata: NodeMetadata) {
+async function checkWarningsForNodeAsync(node: SceneNode | PageNode, metadata: NodeMetadata): Promise<void> {
   if (isWarningNode(node)) {
     return;
   }
 
-  var currentMetadata = createMetadataFromNode(node);
+  var currentMetadata = await createMetadataFromNodeAsync(node);
   if (currentMetadata.ignored) {
     return;
   }
-  
+
   if (node.type !== 'PAGE') {
-    checkWarningsAll(node, metadata);
+    await checkWarningsAllAsync(node, metadata);
   } else {
     var children = (node as NodeWithChildren).children;
-    children.forEach(child => {
-      checkWarningsForNodeRecurse(child, metadata);
-    });
+
+    for (const child of children) {
+      await checkWarningsForNodeRecurseAsync(child, metadata);
+    }
   }
 }
 
-function checkWarningsForNodeRecurse(node:SceneNode, metadata: NodeMetadata) {
+async function checkWarningsForNodeRecurseAsync(node: SceneNode, metadata: NodeMetadata): Promise<void> {
   if (isWarningNode(node)) {
     return;
   }
 
-  var currentMetadata = createMetadataFromNode(node);
+  var currentMetadata = await createMetadataFromNodeAsync(node);
   if (currentMetadata.ignored) {
     return;
   }
 
-  checkWarningsAll(node, metadata);
+  await checkWarningsAllAsync(node, metadata);
 
-  if (supportsChildren(node))
-  {
+  if (supportsChildren(node)) {
     var children = (node as NodeWithChildren).children;
 
-    children.forEach(child => {
-      checkWarningsForNodeRecurse(child, metadata);
-    });
+    for (const child of children) {
+      await checkWarningsForNodeRecurseAsync(child, metadata);
+    }
   }
 }
 
-function checkWarningsAll(node:SceneNode, metadata: NodeMetadata) {
-    checkWarningIfMissingComponentReference(node, metadata);
-    checkWarningIfHasRotation(node, metadata);
-    checkWarningIfMask(node, metadata);
-    checkWarningIfLine(node, metadata);
+async function checkWarningsAllAsync(node: SceneNode, metadata: NodeMetadata): Promise<void> {
+  await checkWarningIfMissingComponentReferenceAsync(node, metadata);
+  checkWarningIfHasRotation(node, metadata);
+  checkWarningIfMask(node, metadata);
+  checkWarningIfLine(node, metadata);
 }
 
-function checkWarningIfMissingComponentReference(node:SceneNode, metadata: NodeMetadata) {
+async function checkWarningIfMissingComponentReferenceAsync(node: SceneNode, metadata: NodeMetadata): Promise<void> {
   if (node.type === 'INSTANCE') {
     var instanceNode = node as InstanceNode;
 
-    var mainComponent = instanceNode.mainComponent;
-    if (mainComponent == null || mainComponent.removed || (!mainComponent.remote && mainComponent.parent == null)) {      
+    var mainComponent = await instanceNode.getMainComponentAsync();
+    if (mainComponent == null || mainComponent.removed || (!mainComponent.remote && mainComponent.parent == null)) {
       metadata.warnings.push(new Warning("Missing component.", node));
     }
   }
 }
 
-function checkWarningIfLine(node:SceneNode, metadata: NodeMetadata) {
+function checkWarningIfLine(node: SceneNode, metadata: NodeMetadata) {
   if (node.type === 'LINE') {
     metadata.warnings.push(new Warning("Line does not supported; use 'Outline stroke'.", node));
   }
 }
 
-function checkWarningIfMask(node:SceneNode, metadata: NodeMetadata) {
+function checkWarningIfMask(node: SceneNode, metadata: NodeMetadata) {
   type NodeWithMask = GroupNode | FrameNode | ComponentNode | InstanceNode | BooleanOperationNode | VectorNode | LineNode | RectangleNode
 
   const n = node as NodeWithMask;
@@ -257,41 +251,43 @@ function checkWarningIfMask(node:SceneNode, metadata: NodeMetadata) {
   }
 }
 
-function checkWarningIfHasRotation(node:SceneNode, metadata: NodeMetadata) {
+function checkWarningIfHasRotation(node: SceneNode, metadata: NodeMetadata) {
   const n = node as NodeWithTransform;
   if (n != null && n.rotation > 0.001 || n.rotation < -0.001) {
     metadata.warnings.push(new Warning("Rotation does not supported.", node));
   }
 }
 
-function createMetadataFromNode(node:BaseNode): NodeMetadata {
-    let metadata =  new NodeMetadata();
-    metadata.id = node.id;
-    metadata.type = node.type;
-    metadata.name = node.name;
-    metadata.ignored = node.getPluginData(pluginData.ignored).toLowerCase() === 'true';
-    metadata.bindingKey = node.getPluginData(pluginData.bindingKey);
-    metadata.localizationKey = node.getPluginData(pluginData.localizationKey);
-    metadata.componentType = node.getPluginData(pluginData.componentType);
-    metadata.tags = node.getPluginData(pluginData.tags);
+async function createMetadataFromNodeAsync(node: BaseNode): Promise<NodeMetadata> {
+  let metadata = new NodeMetadata();
+  metadata.id = node.id;
+  metadata.type = node.type;
+  metadata.name = node.name;
+  metadata.ignored = node.getPluginData(pluginData.ignored).toLowerCase() === 'true';
+  metadata.bindingKey = node.getPluginData(pluginData.bindingKey);
+  metadata.localizationKey = node.getPluginData(pluginData.localizationKey);
+  metadata.componentType = node.getPluginData(pluginData.componentType);
+  metadata.tags = node.getPluginData(pluginData.tags);
 
-    if (node.type == 'INSTANCE' && node.mainComponent != null) {
-      if (node.mainComponent.parent != null && node.mainComponent.parent.type == 'COMPONENT_SET')
-      {
-        metadata.componentType = node.mainComponent.parent.getPluginData(pluginData.componentType);
-      }
-      else
-      {
-        metadata.componentType = node.mainComponent.getPluginData(pluginData.componentType);
-      }
+  if (node.type == 'INSTANCE') {
+    const instanceNode = node as InstanceNode;
+    const mainComponent = await instanceNode.getMainComponentAsync();
+
+    if (mainComponent != null) {
+      const isComponentSet = mainComponent.parent != null && mainComponent.parent.type == 'COMPONENT_SET';
+
+      metadata.componentType = isComponentSet ?
+        mainComponent.parent.getPluginData(pluginData.componentType) :
+        mainComponent.getPluginData(pluginData.componentType);
     }
+  }
 
-    try {
-      var componentData = JSON.parse(node.getPluginData(pluginData.componentData));
-      metadata.componentData = componentData;
-    } catch(e) {}
-  
-    return metadata;
+  try {
+    var componentData = JSON.parse(node.getPluginData(pluginData.componentData));
+    metadata.componentData = componentData;
+  } catch (e) { }
+
+  return metadata;
 }
 
 function updateNodeByMetadata(node: BaseNode, metadata: NodeMetadata | null) {
@@ -302,8 +298,7 @@ function updateNodeByMetadata(node: BaseNode, metadata: NodeMetadata | null) {
     node.setPluginData(pluginData.tags, metadata.tags ? metadata.tags : '');
     node.setPluginData(pluginData.componentData, metadata.componentData ? JSON.stringify(metadata.componentData) : '');
 
-    if (node.type == 'COMPONENT_SET' || node.type == 'COMPONENT')
-    {
+    if (node.type == 'COMPONENT_SET' || node.type == 'COMPONENT') {
       node.setPluginData(pluginData.componentType, metadata.componentType ? metadata.componentType : '');
     }
 
@@ -336,17 +331,17 @@ function updateLocalizationKeyForVariants(node: BaseNode) {
   })
 }
 
-function updateDataForVariants(node: BaseNode, updateNode: (v:SceneNode) => void) {
-  const path:number[] = [];
+function updateDataForVariants(node: BaseNode, updateNode: (v: SceneNode) => void) {
+  const path: number[] = [];
   const componentSet = findAttachedComponentSet(node, path);
-   
+
   if (componentSet != null) {
     //console.log("Component set: " + componentSet?.name + " path: " + path);
     const variants = componentSet.children;
 
-    
+
     for (let j = 0; j < variants.length; j++) {
-      let target:NodeWithChildren = variants[j] as NodeWithChildren;
+      let target: NodeWithChildren = variants[j] as NodeWithChildren;
 
       for (let i = 2; i < path.length; i++) {
         if (i == path.length - 1) {
@@ -362,7 +357,7 @@ function updateDataForVariants(node: BaseNode, updateNode: (v:SceneNode) => void
   }
 }
 
-function findAttachedComponentSet(node: BaseNode, path:number[]) : ComponentSetNode | null {
+function findAttachedComponentSet(node: BaseNode, path: number[]): ComponentSetNode | null {
   path.push(getSiblingIndex(node));
 
   for (let current = node.parent; current != null; current = current.parent) {
@@ -379,18 +374,18 @@ function findAttachedComponentSet(node: BaseNode, path:number[]) : ComponentSetN
   return null;
 }
 
-function getSiblingIndex(node: BaseNode) : number {
-  if (node.parent == null) 
+function getSiblingIndex(node: BaseNode): number {
+  if (node.parent == null)
     return -1;
 
-    var parent = node.parent as NodeWithChildren;
-    if (parent != null) {
-      for (let i = 0; i < parent.children.length; i++) {
-        if (parent.children[i] == node) {
-          return i;
-        }
+  var parent = node.parent as NodeWithChildren;
+  if (parent != null) {
+    for (let i = 0; i < parent.children.length; i++) {
+      if (parent.children[i] == node) {
+        return i;
       }
     }
-  
+  }
+
   return -1;
 }

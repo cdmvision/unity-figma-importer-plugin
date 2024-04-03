@@ -20,6 +20,10 @@
     ],
     "id": "1047282855279327962",
     "name": "Unity Importer",
+    "documentAccess": "dynamic-page",
+    "networkAccess": {
+      "allowedDomains": ["none"]
+    },
     "menu": [
       {
         "name": "Unity Importer",
