@@ -3,8 +3,7 @@ The Unity Figma importer plugin is designed to facilitate the process of saving 
 
 **You also need to use [Unity Figma Importer](https://github.com/cdmvision/unity-figma-importer.git) package to import your Figma design into Unity.**
 
-
-### Installation from Figma Community
+### Installation from Figma Community
 * Open Figma.
 * Navigate to the `Plugins` menu.
 * Click on `Manage Plugins`.
