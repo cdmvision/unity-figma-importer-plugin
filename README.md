@@ -16,3 +16,5 @@ The Unity Figma importer plugin is designed to facilitate the process of saving 
 * `npm run build`
 * Open Figma desktop app and select `Plugins > New > Import plugin from manifest...`
 * Select the plugin `manifest.json` and done!
+
+![Preview](readme/preview.png)
