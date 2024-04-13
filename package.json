@@ -1,0 +1,51 @@
+{
+  "dependencies": {
+    "@create-figma-plugin/ui": "3.1.0",
+    "@create-figma-plugin/utilities": "3.1.0",
+    "preact": "10.15.0"
+  },
+  "devDependencies": {
+    "@create-figma-plugin/build": "3.1.0",
+    "@create-figma-plugin/tsconfig": "3.1.0",
+    "@figma/plugin-typings": "1.88.0",
+    "typescript": "4.9"
+  },
+  "scripts": {
+    "build": "build-figma-plugin --typecheck --minify",
+    "watch": "build-figma-plugin --typecheck --watch"
+  },
+  "figma-plugin": {
+    "editorType": [
+      "figma"
+    ],
+    "id": "1047282855279327962",
+    "name": "Unity Importer",
+    "api": "1.88.0",
+    "documentAccess": "dynamic-page",
+    "networkAccess": {
+      "allowedDomains": ["none"]
+    },
+    "menu": [
+      {
+        "name": "Unity Importer",
+        "main": "src/main.ts",
+        "ui": "src/ui.tsx",
+        "parameterOnly": false
+      },
+      "-",
+      {
+        "name": "Convert to Icon",
+        "main": "src/convert-icon/main.ts",
+        "parameterOnly": false,
+        "parameters": [
+          {
+            "key": "size",
+            "description": "Enter an icon size",
+            "allowFreeform": true,
+            "optional": true
+          }
+        ]
+      }
+    ]
+  }
+}
