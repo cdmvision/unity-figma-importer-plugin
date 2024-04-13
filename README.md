@@ -1,4 +1,7 @@
 # Unity Figma Importer Plugin
+
+Plugin URL: https://www.figma.com/community/plugin/1047282855279327962
+
 The Unity Figma importer plugin is designed to facilitate the process of saving Unity-specific data directly onto Figma nodes. This data can then be utilized during the import process into Unity, streamlining the workflow between design and development teams. This plugin runs on Figma app.
 
 **You also need to use [Unity Figma Importer](https://github.com/cdmvision/unity-figma-importer.git) package to import your Figma design into Unity.**
