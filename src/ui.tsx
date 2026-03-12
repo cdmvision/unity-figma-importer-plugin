@@ -15,12 +15,12 @@ import {
     Toggle,
     Inline,
     IconButton,
-    IconTarget32,
-    IconSwap32,
-    IconInfo32,
+    IconGoToMainComponentSmall24,
+    IconSwap24,
+    IconInfo16,
     Banner,
     Disclosure,
-    IconWarning32,
+    IconWarning16,
     Divider
 } from '@create-figma-plugin/ui'
 
@@ -69,14 +69,9 @@ enum ProgressBarOriginRadial90 {
     BottomRight   = 'BottomRight'
 }
 
-enum ProgressBarOriginRadial180 {
-    Bottom  = 'Bottom',
-    Top     = 'Top',
-    Left    = 'Left',
-    Right   = 'Right'
-}
-
-enum ProgressBarOriginRadial360 {
+// FIX 4: Consolidated ProgressBarOriginRadial180 and ProgressBarOriginRadial360
+// (they were identical) into a single enum.
+enum ProgressBarOriginRadial {
     Bottom  = 'Bottom',
     Top     = 'Top',
     Left    = 'Left',
@@ -135,8 +130,9 @@ class ProgressBarData extends ComponentData {
     public originHorizontal: ProgressBarOriginHorizontal = ProgressBarOriginHorizontal.Left;
     public originVertical: ProgressBarOriginVertical = ProgressBarOriginVertical.Bottom;
     public originRadial90: ProgressBarOriginRadial90 = ProgressBarOriginRadial90.BottomLeft;
-    public originRadial180: ProgressBarOriginRadial180 = ProgressBarOriginRadial180.Bottom;
-    public originRadial360: ProgressBarOriginRadial360 = ProgressBarOriginRadial360.Bottom;
+    // FIX 4: Updated field types to use the consolidated ProgressBarOriginRadial enum
+    public originRadial180: ProgressBarOriginRadial = ProgressBarOriginRadial.Bottom;
+    public originRadial360: ProgressBarOriginRadial = ProgressBarOriginRadial.Bottom;
     public clockwise: boolean = false;
 
     getType(): string {
@@ -156,11 +152,12 @@ class ProgressBarData extends ComponentData {
         const originRadial90Options: Array<DropdownOption> = Object.values(ProgressBarOriginRadial90).map(v => ({ value : v}));
         const [originRadial90, setRadial90Origin] = useState<ProgressBarOriginRadial90>(this.originRadial90);
 
-        const originRadial180Options: Array<DropdownOption> = Object.values(ProgressBarOriginRadial180).map(v => ({ value : v}));
-        const [originRadial180, setRadial180Origin] = useState<ProgressBarOriginRadial180>(this.originRadial180);
+        // FIX 4: Use consolidated ProgressBarOriginRadial for both 180 and 360
+        const originRadial180Options: Array<DropdownOption> = Object.values(ProgressBarOriginRadial).map(v => ({ value : v}));
+        const [originRadial180, setRadial180Origin] = useState<ProgressBarOriginRadial>(this.originRadial180);
 
-        const originRadial360Options: Array<DropdownOption> = Object.values(ProgressBarOriginRadial360).map(v => ({ value : v}));
-        const [originRadial360, setRadial360Origin] = useState<ProgressBarOriginRadial360>(this.originRadial360);
+        const originRadial360Options: Array<DropdownOption> = Object.values(ProgressBarOriginRadial).map(v => ({ value : v}));
+        const [originRadial360, setRadial360Origin] = useState<ProgressBarOriginRadial>(this.originRadial360);
 
         const [clockwise, setClockwise] = useState<boolean>(this.clockwise);
 
@@ -203,15 +200,16 @@ class ProgressBarData extends ComponentData {
             emitNodeUpdated(false);
         }
 
+        // FIX 4: Updated handler types to use ProgressBarOriginRadial
         function handleOriginRadial180Input(event: JSX.TargetedEvent<HTMLInputElement>) {
-            const value = event.currentTarget.value as ProgressBarOriginRadial180;
+            const value = event.currentTarget.value as ProgressBarOriginRadial;
             setRadial180Origin(value);
             getProgressBar().originRadial180 = value;
             emitNodeUpdated(false);
         }
 
         function handleOriginRadial360Input(event: JSX.TargetedEvent<HTMLInputElement>) {
-            const value = event.currentTarget.value as ProgressBarOriginRadial360;
+            const value = event.currentTarget.value as ProgressBarOriginRadial;
             setRadial360Origin(value);
             getProgressBar().originRadial360 = value;
             emitNodeUpdated(false);
@@ -575,7 +573,7 @@ function drawBindingKeyField(): h.JSX.Element | null {
             <VerticalSpace space="small" />
             <Text>Binding Key</Text>
             <VerticalSpace space="small" />
-            <Textbox variant="border" onChange={handleInput} value={bindingKey}/>
+            <Textbox onChange={handleInput} value={bindingKey}/>
             <VerticalSpace space="small" />
         </Container>
     )
@@ -601,7 +599,7 @@ function drawLocalizationKeyField(): h.JSX.Element | null {
                 <VerticalSpace space="small" />
                 <Text>Localization Key</Text>
                 <VerticalSpace space="small" />
-                <Textbox variant="border" onChange={handleInput} value={localizationKey}/>
+                <Textbox onChange={handleInput} value={localizationKey}/>
                 <VerticalSpace space="small" />
             </Container>
         )
@@ -627,7 +625,7 @@ function drawTagsField(): h.JSX.Element | null {
             <VerticalSpace space="small" />
             <Text>Tags</Text>
             <VerticalSpace space="small" />
-            <Textbox variant="border" onChange={handleInput} value={tags}/>
+            <Textbox onChange={handleInput} value={tags}/>
             <VerticalSpace space="small" />
         </Container>
     );
@@ -646,11 +644,14 @@ function drawComponentInstancesField(): h.JSX.Element | null {
     const [expanded, setExpanded] = useState<boolean>(false);
     const [expandedPages, setExpandedPages] = useState<Record<string, boolean>>({});
 
+    // FIX 1: Capture the return value of on() as an unsubscribe function and
+    // return it from useEffect for cleanup on unmount.
     useEffect(() => {
-        on(events.componentInstancesResult, function (report: ComponentUsageReport | null) {
+        const unsubscribe = on(events.componentInstancesResult, function (report: ComponentUsageReport | null) {
             setReport(report);
             setLoading(false);
         });
+        return unsubscribe; // cleanup on unmount
     }, []);
 
     function handleFindInstances() {
@@ -698,7 +699,7 @@ function drawComponentInstancesField(): h.JSX.Element | null {
         content.push(
             <Container space='extraSmall'>
                 <VerticalSpace space='small' />
-                <Text align="center" muted>Scanning file…</Text>
+                <Text align="center">Scanning file…</Text>
                 <VerticalSpace space='small' />
             </Container>
         );
@@ -708,7 +709,7 @@ function drawComponentInstancesField(): h.JSX.Element | null {
         if (report.isUnused) {
             content.push(
                 <Container space='extraSmall'>
-                    <Banner icon={<IconWarning32 />} variant="warning">
+                    <Banner icon={<IconWarning16 />} variant="warning">
                         No instances found. This {isComponentSet ? 'component set' : 'component'} is
                         not used anywhere in the file.
                     </Banner>
@@ -734,7 +735,7 @@ function drawComponentInstancesField(): h.JSX.Element | null {
                             pageItems.push(
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
                                     <IconButton onClick={() => handleGoToInstance(inst.instanceId)} title="Go to instance">
-                                        <IconTarget32 />
+                                        <IconGoToMainComponentSmall24 />
                                     </IconButton>
                                     <Text>{inst.instanceName}</Text>
                                 </div>
@@ -759,7 +760,7 @@ function drawComponentInstancesField(): h.JSX.Element | null {
                     content.push(
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <IconButton onClick={() => handleGoToInstance(inst.instanceId)} title="Go to instance">
-                                <IconTarget32 />
+                                <IconGoToMainComponentSmall24 />
                             </IconButton>
                             <Text>{inst.instanceName}</Text>
                         </div>
@@ -791,10 +792,7 @@ function drawComponentInstancesField(): h.JSX.Element | null {
     );
 }
 
-function drawExtraControls(): h.JSX.Element | null {
-
-    return null;
-}
+// FIX 2: Removed drawExtraControls() — it always returned null and was dead code.
 
 function drawWarningsField(): h.JSX.Element | null {
     const [expand, setExpand] = useState<boolean>(false);
@@ -819,7 +817,7 @@ function drawWarningsField(): h.JSX.Element | null {
 
         if (metadata.type === 'PAGE') {
             metadata.warnings.forEach(warning => {
-                layout.push(<Inline space='extraSmall'><IconButton onClick={() => goToNode(warning.nodeId)} title="Select element"><IconTarget32/></IconButton><Text height={32}>{warning.nodeName}</Text></Inline>);
+                layout.push(<Inline space='extraSmall'><IconButton onClick={() => goToNode(warning.nodeId)} title="Select element"><IconGoToMainComponentSmall24/></IconButton><Text>{warning.nodeName}</Text></Inline>);
             });
 
             const style = { height: '64px' }
@@ -836,7 +834,7 @@ function drawWarningsField(): h.JSX.Element | null {
             layout.push(<div>{warning.message}</div>);
         });
 
-        return (<Banner icon={<IconWarning32 />} variant="warning">{layout}</Banner>)
+        return (<Banner icon={<IconWarning16 />} variant="warning">{layout}</Banner>)
     }
 
     return null;
@@ -872,7 +870,8 @@ function drawComponentTypeField() : h.JSX.Element | null {
 
     if (isComponent || isComponentSet)
     {
-        var component = components.find(x => x.getType() == metadata?.componentType);
+        // FIX 5: replaced var with const
+        const component = components.find(x => x.getType() == metadata?.componentType);
         if (component)
         {
             component.updateData();
@@ -907,8 +906,8 @@ function drawComponentTypeField() : h.JSX.Element | null {
                 <VerticalSpace space="small" />
 
                 <Columns space="extraSmall">
-                    <TextboxAutocomplete variant="border" onInput={handleInput} value={componentType} options={options} />
-                    <IconButton onClick={clearComponentData} title="Reset Component"><IconSwap32/></IconButton>
+                    <TextboxAutocomplete onInput={handleInput} value={componentType} options={options} />
+                    <IconButton onClick={clearComponentData} title="Reset Component"><IconSwap24/></IconButton>
                 </Columns>
 
                 <VerticalSpace space="medium" />
@@ -923,7 +922,7 @@ function drawComponentTypeField() : h.JSX.Element | null {
                 <VerticalSpace space="small" />
                 <Text>Component Type</Text>
                 <VerticalSpace space="small" />
-                <Textbox variant="border" value={componentType} disabled />
+                <Textbox value={componentType} disabled />
                 <VerticalSpace space="small" />
             </Container>
         );
@@ -941,42 +940,44 @@ function Plugin(data: { metadataJson: string} ) {
 
     if (metadata != null)
     {
-        var titleField = drawTitleField();
+        // FIX 5: replaced var with const throughout Plugin function
+        const titleField = drawTitleField();
         if (titleField != null) {
             layout.push(titleField);
         }
 
-        var bindingKeyField = drawBindingKeyField();
+        const bindingKeyField = drawBindingKeyField();
         if (bindingKeyField != null) {
             layout.push(bindingKeyField);
         }
 
-        var localizationKeyField = drawLocalizationKeyField();
+        const localizationKeyField = drawLocalizationKeyField();
         if (localizationKeyField != null) {
             layout.push(localizationKeyField);
         }
 
-        var componenTypeField = drawComponentTypeField();
-        if (componenTypeField != null) {
-            layout.push(componenTypeField);
+        // FIX 3: renamed componenTypeField → componentTypeField (typo fix)
+        const componentTypeField = drawComponentTypeField();
+        if (componentTypeField != null) {
+            layout.push(componentTypeField);
         }
 
-        var componentInstancesField = drawComponentInstancesField();
+        const componentInstancesField = drawComponentInstancesField();
         if (componentInstancesField != null) {
             layout.push(componentInstancesField);
         }
 
-        var tagsField = drawTagsField();
+        const tagsField = drawTagsField();
         if (tagsField != null) {
             layout.push(tagsField);
         }
 
-        var ignoredField = drawIgnoredField();
+        const ignoredField = drawIgnoredField();
         if (ignoredField != null) {
             layout.push(ignoredField);
         }
 
-        var warningsField = drawWarningsField();
+        const warningsField = drawWarningsField();
         if (warningsField != null) {
             layout.push(warningsField);
         }
@@ -984,7 +985,7 @@ function Plugin(data: { metadataJson: string} ) {
         layout.push(
             <Container space='small'>
                 <VerticalSpace space="small" />
-                <Banner icon={<IconInfo32 />}>Select a node.</Banner>
+                <Banner icon={<IconInfo16 />}>Select a node.</Banner>
                 <VerticalSpace space="small" />
             </Container>
         );
@@ -993,7 +994,7 @@ function Plugin(data: { metadataJson: string} ) {
     /*function onWindowResize(windowSize: { width: number; height: number }) {
       emit('RESIZE_WINDOW', windowSize)
     }
-  
+
     useWindowResize(onWindowResize, {
       minWidth: 240,
       minHeight: 240,
@@ -1001,12 +1002,8 @@ function Plugin(data: { metadataJson: string} ) {
       maxHeight: 500
     })*/
 
-    var extraControls = drawExtraControls();
-    if (extraControls != null) {
-        layout.push(<Divider />);
-        layout.push(<VerticalSpace space="extraSmall" />);
-        layout.push(extraControls);
-    }
+    // FIX 2: Removed drawExtraControls() call and its conditional block — it
+    // always returned null, so the Divider and extra controls were never rendered.
 
     return (<Container space='extraSmall'>{layout}</Container>)
 }

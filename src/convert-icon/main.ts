@@ -1,4 +1,4 @@
-export default function (s?:Number) {
+export default function () {
   figma.parameters.on(
     'input',
     ({ parameters, key, query, result }: ParameterInputEvent) => {
@@ -29,7 +29,7 @@ export default function (s?:Number) {
       parameters = { size: "24" };
     }
     
-    convertToIcon(parseFloat(parameters.size));
+    convertToIcon(parseInt(parameters.size, 10));
     figma.closePlugin();
   });
 }
@@ -38,7 +38,7 @@ function convertToIcon(iconSize:number)
 {
   const nodes = figma.currentPage.selection;
     
-    if (nodes.length == 0) {
+    if (nodes.length === 0) {
       figma.notify("There is no node selected.");
       return;
     }

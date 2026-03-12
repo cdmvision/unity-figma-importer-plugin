@@ -66,7 +66,10 @@ export function serializeMetadata(metadata: NodeMetadata | null) : string {
 export function deserializeMetadata(json: string): NodeMetadata | null {
   if (json != null && json.length > 0)
   {
-    return <NodeMetadata> JSON.parse(json);
+    const parsed = JSON.parse(json);
+    if (parsed != null && typeof parsed === 'object') {
+      return parsed as NodeMetadata;
+    }
   }
   return null;
 }
