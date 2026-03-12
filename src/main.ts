@@ -1,5 +1,5 @@
-import { on, showUI } from '@create-figma-plugin/utilities'
-import { deserializeMetadata, events, NodeMetadata, pluginData, serializeMetadata, Warning } from './types'
+import { emit, on, showUI } from '@create-figma-plugin/utilities'
+import { deserializeMetadata, events, NodeMetadata, pluginData, serializeMetadata, Warning, InstanceInfo, ComponentUsageReport } from './types'
 
 type NodeWithTransform = GroupNode | FrameNode | ComponentNode | InstanceNode | BooleanOperationNode | VectorNode | LineNode | RectangleNode
 
@@ -56,6 +56,20 @@ export default async function () {
     await refreshUIAsync();
   });
 
+  on(events.findComponentInstances, async function () {
+    const node = getSelectedNode();
+    if (node.type === 'COMPONENT' || node.type === 'COMPONENT_SET') {
+      const report = await getComponentUsageReportAsync(node as ComponentNode | ComponentSetNode);
+      emit(events.componentInstancesResult, report);
+    } else {
+      emit(events.componentInstancesResult, null);
+    }
+  });
+
+  on(events.navigateToInstance, async function (instanceId: string) {
+    await navigateToInstanceAsync(instanceId);
+  });
+
   /*on('RESIZE_WINDOW', function (windowSize: { width: number; height: number }) {
     const { width, height } = windowSize
     figma.ui.resize(width, height)
@@ -93,10 +107,10 @@ function getSelectedNode() {
 }
 
 function supportsChildren(node: SceneNode | PageNode):
-  node is FrameNode | ComponentNode | InstanceNode | BooleanOperationNode {
+    node is FrameNode | ComponentNode | InstanceNode | BooleanOperationNode {
   return node.type === 'FRAME' || node.type === 'GROUP' ||
-    node.type === 'COMPONENT' || node.type === 'INSTANCE' ||
-    node.type === 'BOOLEAN_OPERATION' || node.type === 'PAGE';
+      node.type === 'COMPONENT' || node.type === 'INSTANCE' ||
+      node.type === 'BOOLEAN_OPERATION' || node.type === 'PAGE';
 }
 
 type NodeWithChildren = GroupNode | FrameNode | ComponentNode | InstanceNode | BooleanOperationNode | PageNode | ComponentSetNode
@@ -277,8 +291,8 @@ async function createMetadataFromNodeAsync(node: BaseNode): Promise<NodeMetadata
       const isComponentSet = mainComponent.parent != null && mainComponent.parent.type == 'COMPONENT_SET';
 
       metadata.componentType = isComponentSet ?
-        mainComponent.parent.getPluginData(pluginData.componentType) :
-        mainComponent.getPluginData(pluginData.componentType);
+          mainComponent.parent.getPluginData(pluginData.componentType) :
+          mainComponent.getPluginData(pluginData.componentType);
     }
   }
 
@@ -388,4 +402,121 @@ function getSiblingIndex(node: BaseNode): number {
   }
 
   return -1;
+}
+
+// ─── Component Instance Tracking ─────────────────────────────────────────────
+
+function buildNodePath(node: BaseNode): string {
+  const parts: string[] = [];
+  let current: BaseNode | null = node;
+  while (current && current.type !== 'DOCUMENT') {
+    parts.unshift(current.name);
+    current = current.parent;
+  }
+  return parts.join(' › ');
+}
+
+function getContainingPage(node: BaseNode): PageNode | null {
+  let current: BaseNode | null = node;
+  while (current) {
+    if (current.type === 'PAGE') return current as PageNode;
+    current = current.parent;
+  }
+  return null;
+}
+
+async function findInstancesInSubtreeAsync(
+    node: BaseNode,
+    targetComponentIds: Set<string>,
+    results: InstanceInfo[]
+): Promise<void> {
+  if (node.type === 'INSTANCE') {
+    const instance = node as InstanceNode;
+    const main = await instance.getMainComponentAsync();
+
+    if (main) {
+      const mainId = main.id;
+      const parentSetId = main.parent?.type === 'COMPONENT_SET' ? main.parent.id : null;
+
+      if (targetComponentIds.has(mainId) || (parentSetId && targetComponentIds.has(parentSetId))) {
+        const page = getContainingPage(instance);
+        const parent = instance.parent;
+
+        results.push({
+          instanceId: instance.id,
+          instanceName: instance.name,
+          pageName: page?.name ?? 'Unknown Page',
+          pageId: page?.id ?? '',
+          parentName: parent?.name ?? 'Root',
+          path: buildNodePath(instance),
+        });
+      }
+    }
+  }
+
+  if ('children' in node) {
+    const container = node as ChildrenMixin & BaseNode;
+    for (const child of container.children) {
+      await findInstancesInSubtreeAsync(child, targetComponentIds, results);
+    }
+  }
+}
+
+async function getComponentUsageReportAsync(
+    component: ComponentNode | ComponentSetNode
+): Promise<ComponentUsageReport> {
+  const targetIds = new Set<string>();
+
+  if (component.type === 'COMPONENT_SET') {
+    targetIds.add(component.id);
+    for (const child of component.children) {
+      if (child.type === 'COMPONENT') {
+        targetIds.add(child.id);
+      }
+    }
+  } else {
+    targetIds.add(component.id);
+  }
+
+  const instances: InstanceInfo[] = [];
+
+  // Load all pages first for dynamic-page mode
+  const pages = figma.root.children;
+  for (const page of pages) {
+    await page.loadAsync();
+    await findInstancesInSubtreeAsync(page, targetIds, instances);
+  }
+
+  instances.sort((a, b) => {
+    if (a.pageName !== b.pageName) return a.pageName.localeCompare(b.pageName);
+    return a.path.localeCompare(b.path);
+  });
+
+  return {
+    componentId: component.id,
+    componentName: component.name,
+    componentType: component.type as 'COMPONENT' | 'COMPONENT_SET',
+    instances,
+    totalCount: instances.length,
+    isUnused: instances.length === 0,
+  };
+}
+
+async function navigateToInstanceAsync(instanceId: string): Promise<void> {
+  const node = await figma.getNodeByIdAsync(instanceId);
+  if (!node) {
+    figma.notify('Could not find the instance. It may have been deleted.');
+    return;
+  }
+
+  const page = getContainingPage(node);
+  if (page) {
+    await figma.setCurrentPageAsync(page);
+  }
+
+  if (node.type !== 'DOCUMENT' && node.type !== 'PAGE') {
+    const sceneNode = node as SceneNode;
+    figma.currentPage.selection = [sceneNode];
+    figma.viewport.scrollAndZoomIntoView([sceneNode]);
+  }
 }
