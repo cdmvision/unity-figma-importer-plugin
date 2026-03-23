@@ -3,12 +3,15 @@ export const events = {
   refreshUI: 'refreshUI',
   selectNode: 'selectNode',
   showWarnings : 'showWarnings',
-  hideWarnings : 'hideWarnings'
+  hideWarnings : 'hideWarnings',
+  findComponentInstances: 'findComponentInstances',
+  componentInstancesResult: 'componentInstancesResult',
+  navigateToInstance: 'navigateToInstance'
 };
 
 export const pluginData = {
   ignored: 'ignored',
-  bindingKey: 'bindingKey', 
+  bindingKey: 'bindingKey',
   localizationKey: 'localizationKey',
   componentType: 'componentType',
   componentData: 'componentData',
@@ -57,13 +60,34 @@ export class NodeMetadata {
 }
 
 export function serializeMetadata(metadata: NodeMetadata | null) : string {
-    return JSON.stringify(metadata);
+  return JSON.stringify(metadata);
 }
 
 export function deserializeMetadata(json: string): NodeMetadata | null {
   if (json != null && json.length > 0)
   {
-    return <NodeMetadata> JSON.parse(json);
+    const parsed = JSON.parse(json);
+    if (parsed != null && typeof parsed === 'object') {
+      return parsed as NodeMetadata;
+    }
   }
   return null;
+}
+
+export interface InstanceInfo {
+  instanceId: string;
+  instanceName: string;
+  pageName: string;
+  pageId: string;
+  parentName: string;
+  path: string;
+}
+
+export interface ComponentUsageReport {
+  componentId: string;
+  componentName: string;
+  componentType: 'COMPONENT' | 'COMPONENT_SET';
+  instances: InstanceInfo[];
+  totalCount: number;
+  isUnused: boolean;
 }
